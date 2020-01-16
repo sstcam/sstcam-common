@@ -27,7 +27,8 @@ include(CTest)
 
 # src
 set(HEADER_LIST include/sstcam/io/TIOReader.h include/sstcam/io/Util.h)
-add_library(${LIBTARGET} SHARED src/TIOReader.cc src/Util.cc ${HEADER_LIST})
+add_library(${LIBTARGET} SHARED src/TIOReader.cc src/Util.cc  ${HEADER_LIST})
+target_link_libraries(${LIBTARGET} sstcam_interfaces_c ${CFITSIO_LIBRARIES})
 target_include_directories(${LIBTARGET} PUBLIC include ${CFITSIO_INCLUDE_DIRS})
 target_compile_features(${LIBTARGET} PUBLIC cxx_std_11)
 source_group(TREE "${PROJECT_SOURCE_DIR}/include" PREFIX "Header Files" FILES ${HEADER_LIST})

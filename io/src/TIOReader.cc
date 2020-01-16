@@ -6,6 +6,7 @@
 #include <utility>
 #include <iostream>
 #include <cinttypes>
+#include <cstring>
 
 namespace sstcam {
 namespace io {
