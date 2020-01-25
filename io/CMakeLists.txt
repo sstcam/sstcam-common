@@ -26,13 +26,21 @@ find_package(CFITSIO REQUIRED)
 include(CTest)
 
 # src
-set(HEADER_LIST include/sstcam/io/TIOReader.h include/sstcam/io/Util.h)
-add_library(${LIBTARGET} SHARED src/TIOReader.cc src/Util.cc  ${HEADER_LIST})
+set(HEADER_LIST include/sstcam/io/TIOReader.h include/sstcam/io/FitsUtils.h)
+add_library(${LIBTARGET} SHARED src/TIOReader.cc src/FitsUtils.cc ${HEADER_LIST})
 target_link_libraries(${LIBTARGET} sstcam_interfaces_c ${CFITSIO_LIBRARIES})
 target_include_directories(${LIBTARGET} PUBLIC include ${CFITSIO_INCLUDE_DIRS})
 target_compile_features(${LIBTARGET} PUBLIC cxx_std_11)
 source_group(TREE "${PROJECT_SOURCE_DIR}/include" PREFIX "Header Files" FILES ${HEADER_LIST})
 install (TARGETS ${LIBTARGET} LIBRARY DESTINATION lib)
 
+# ctests
+add_library(test_main_io OBJECT ctests/test_main.cc)
+
+add_executable(test_FitsUtils ctests/FitsUtils.cc $<TARGET_OBJECTS:test_main>)
+add_test(NAME test_FitsUtils COMMAND test_FitsUtils)
+target_link_libraries(test_FitsUtils ${LIBTARGET})
+target_include_directories(test_FitsUtils PUBLIC ctests)
+target_compile_features(test_FitsUtils PRIVATE cxx_std_11)
 # Compilation options
 target_compile_options(${LIBTARGET} PUBLIC -O2 -Wall -pedantic -Werror -Wextra)
