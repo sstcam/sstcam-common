@@ -34,6 +34,10 @@ target_compile_features(${LIBTARGET} PUBLIC cxx_std_11)
 source_group(TREE "${PROJECT_SOURCE_DIR}/include" PREFIX "Header Files" FILES ${HEADER_LIST})
 install (TARGETS ${LIBTARGET} LIBRARY DESTINATION lib)
 
+# pybind
+pybind11_add_module(${PYTARGET} pybind/module.cc pybind/TIOReader.cc)
+target_link_libraries(${PYTARGET} PRIVATE ${LIBTARGET})
+
 # ctests
 add_library(test_main_io OBJECT ctests/test_main.cc)
 
@@ -42,5 +46,12 @@ add_test(NAME test_FitsUtils COMMAND test_FitsUtils)
 target_link_libraries(test_FitsUtils ${LIBTARGET})
 target_include_directories(test_FitsUtils PUBLIC ctests)
 target_compile_features(test_FitsUtils PRIVATE cxx_std_11)
+
+add_executable(test_TIOReader ctests/TIOReader.cc $<TARGET_OBJECTS:test_main>)
+add_test(NAME test_TIOReader COMMAND test_TIOReader)
+target_link_libraries(test_TIOReader ${LIBTARGET})
+target_include_directories(test_TIOReader PUBLIC ctests)
+target_compile_features(test_TIOReader PRIVATE cxx_std_11)
+
 # Compilation options
 target_compile_options(${LIBTARGET} PUBLIC -O2 -Wall -pedantic -Werror -Wextra)
