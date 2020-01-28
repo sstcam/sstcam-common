@@ -7,6 +7,7 @@
 #include <cinttypes>
 #include <memory>
 #include <set>
+#include <cstring>
 
 namespace sstcam {
 namespace io {
