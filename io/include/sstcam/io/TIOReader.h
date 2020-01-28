@@ -32,7 +32,7 @@ public:
 
     bool IsOpen() const { return fits_ != nullptr; }
 
-    WaveformRunHeader* GetRunHeader() const { return run_header_.get(); }
+    std::shared_ptr<WaveformRunHeader> GetRunHeader() const { return run_header_; }
 
     std::string GetPath() const;
 
@@ -64,7 +64,7 @@ public:
     }
 
 private:
-    std::unique_ptr<WaveformRunHeader> run_header_;
+    std::shared_ptr<WaveformRunHeader> run_header_;
 
     fitsfile* fits_;
     int32_t event_hdu_num_;
@@ -83,7 +83,7 @@ private:
 
     template<typename T>
     T GetEvent(uint32_t event_index) const {
-        T event(run_header_.get());
+        T event(run_header_);
 
         event.index = event_index;
 

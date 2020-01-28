@@ -97,11 +97,11 @@ void TIOReader::CreateWaveformRunHeader() {
     if (IsR1()) {
         auto scale = fitsutils::GetHeaderKeyValue<float, TFLOAT>(fits_, "SCALE");
         auto offset = fitsutils::GetHeaderKeyValue<float, TFLOAT>(fits_, "OFFSET");
-        run_header_ = std::make_unique<WaveformRunHeader>(
+        run_header_ = std::make_shared<WaveformRunHeader>(
             n_packets_per_event, packet_size, active_modules, n_samples,
             true, scale, offset);
     } else {
-        run_header_ = std::make_unique<WaveformRunHeader>(
+        run_header_ = std::make_shared<WaveformRunHeader>(
             n_packets_per_event, packet_size,active_modules, n_samples);
     }
 }
