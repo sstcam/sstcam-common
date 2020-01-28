@@ -55,3 +55,11 @@ target_compile_features(test_TIOReader PRIVATE cxx_std_11)
 
 # Compilation options
 target_compile_options(${LIBTARGET} PUBLIC -O2 -Wall -pedantic -Werror -Wextra)
+
+
+# Python stuff
+# Creating a symlink to the python package
+add_custom_command(TARGET ${PYTARGET} POST_BUILD
+                  COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/python/" "${PYTHON_PACKAGE_PATH}/io")
+# Creating a symlink to the python extension in the main python package directory tree
+add_custom_command(TARGET ${PYTARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink "$<TARGET_FILE:${PYTARGET}>" "${PYTHON_EXTENSIONS_PATH}/${PYTARGET}")
