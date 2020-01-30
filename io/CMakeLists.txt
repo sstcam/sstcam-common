@@ -34,9 +34,9 @@ target_compile_features(${LIBTARGET} PUBLIC cxx_std_11)
 source_group(TREE "${PROJECT_SOURCE_DIR}/include" PREFIX "Header Files" FILES ${HEADER_LIST})
 install (TARGETS ${LIBTARGET} LIBRARY DESTINATION lib)
 
-# pybind
-pybind11_add_module(${PYTARGET} pybind/module.cc pybind/TIOReader.cc)
-target_link_libraries(${PYTARGET} PRIVATE ${LIBTARGET})
+# python module
+set(PYTHON_SRC pybind/module.cc pybind/TIOReader.cc)
+python_module(${PYTARGET} ${LIBTARGET} io "${PYTHON_SRC}")
 
 # ctests
 add_library(test_main_io OBJECT ctests/test_main.cc)
@@ -55,11 +55,3 @@ target_compile_features(test_TIOReader PRIVATE cxx_std_11)
 
 # Compilation options
 target_compile_options(${LIBTARGET} PUBLIC -O2 -Wall -pedantic -Werror -Wextra)
-
-
-# Python stuff
-# Creating a symlink to the python package
-add_custom_command(TARGET ${PYTARGET} POST_BUILD
-                  COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/python/" "${PYTHON_PACKAGE_PATH}/io")
-# Creating a symlink to the python extension in the main python package directory tree
-add_custom_command(TARGET ${PYTARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink "$<TARGET_FILE:${PYTARGET}>" "${PYTHON_EXTENSIONS_PATH}/${PYTARGET}")
