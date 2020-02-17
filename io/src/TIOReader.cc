@@ -8,7 +8,7 @@
 #include <memory>
 #include <set>
 #include <cstring>
-#include <fitsio.h>
+#include <cfitsio/fitsio.h>
 
 namespace sstcam {
 namespace io {

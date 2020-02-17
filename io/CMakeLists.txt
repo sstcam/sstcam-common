@@ -14,7 +14,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # Dependencies
 #find_package(sstcam-base REQUIRED)
 
-find_package(pybind11 REQUIRED)
+# find_package(pybind11 REQUIRED)
 
 #if(CMAKE_INSTALL_PREFIX)
 #    set(CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX})

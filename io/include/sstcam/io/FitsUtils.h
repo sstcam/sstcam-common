@@ -5,8 +5,8 @@
 #define SSTCAM_IO_FITSUTILS_H_
 
 #include <string>
-#include <fitsio.h>
 #include <iostream>
+#include <cfitsio/fitsio.h>
 
 namespace sstcam {
 namespace io {
