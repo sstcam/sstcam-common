@@ -8,6 +8,7 @@
 #include <memory>
 #include <set>
 #include <cstring>
+#include <fitsio.h>
 
 namespace sstcam {
 namespace io {
@@ -15,8 +16,15 @@ namespace io {
 TIOReader::TIOReader(const std::string& path)
     : fits_(nullptr),
       event_hdu_num_(0),
-      n_event_columns_(0),
-      n_event_headers_(0)
+      n_event_headers_(0),
+      n_packets_per_event_(0),
+      packet_size_(0),
+      n_events_(0),
+      n_pixels_(0),
+      n_samples_(0),
+      first_active_module_slot_(0),
+      scale_(1.),
+      offset_(0.)
 {
     // Open fits file
     int status = 0;
@@ -28,8 +36,8 @@ TIOReader::TIOReader(const std::string& path)
     }
 
     // Get EventHeaderVersion
-    uint16_t version = fitsutils::GetHeaderKeyValue<int16_t, TINT>(
-        fits_, "EVENT_HEADER_VERSION");
+    std::string key = "EVENT_HEADER_VERSION";
+    uint16_t version = fitsutils::GetHeaderKeyValue<int16_t, TINT>(fits_, key);
     if (version < 1) {
         std::cerr << "Incompatible EVENT_HEADER_VERSION: " << version << std::endl;
         Close();
@@ -50,14 +58,15 @@ TIOReader::TIOReader(const std::string& path)
     char tform[FLEN_KEYWORD];
 
     // Get Number of columns in EVENTS HDU
-    if (fits_read_key_lng(fits_, "TFIELDS", &n_event_columns_, comment, &status)) {
+    long n_event_columns;
+    if (fits_read_key_lng(fits_, "TFIELDS", &n_event_columns, comment, &status)) {
         std::cerr << "Cannot read TFIELDS " << fitsutils::ErrorMessage(status) << std::endl;
         Close();
         return;
     }
 
-    // Find first packet column
-    for (int64_t i = 0; i < n_event_columns_ && i < 256; ++i) {
+    // Find first packet column (and therefore calculate the number of headers)
+    for (int64_t i = 0; i < n_event_columns && i < 256; ++i) {
         snprintf(tform, FLEN_KEYWORD, "TTYPE%" PRIi64, i + 1);
         if (fits_read_key_str(fits_, tform, value, comment, &status)) {
             std::cerr << "Cannot read TTYPE" << i + 1 << " "
@@ -73,88 +82,80 @@ TIOReader::TIOReader(const std::string& path)
         }
     }
 
-    CreateWaveformRunHeader();
+    // The number of packets in an event is the total number of columns minus
+    // the number of header columns
+    n_packets_per_event_ = static_cast<size_t>(n_event_columns - n_event_headers_);
+
+    // Obtain the size of a waveform packet, and check that all waveform packet
+    // columns share this packet size
+    status = 0;
+    comment[0] = 0;
+    value[0] = 0;
+    tform[0] = 0;
+    for (int i = n_event_headers_; i < n_event_columns; ++i) {
+        snprintf(tform, FLEN_KEYWORD, "TFORM%d", i + 1);
+        if (fits_read_key_str(fits_, tform, value, comment, &status)) {
+            std::cerr << "Cannot read TFORM" << i + 1 << " "
+                      << fitsutils::ErrorMessage(status) << std::endl;
+            return;
+        }
+
+        uint16_t packet_size_i;
+        if (sscanf(value, "%" SCNu16 "B", &packet_size_i) == 1) {
+            if (packet_size_ == 0) {
+                packet_size_ = packet_size_i;
+            }
+            else if (packet_size_i != packet_size_) {
+                std::cerr << "Expected value of TFORM" << i << " is "
+                          << packet_size_ << "B, but it is " << value << std::endl;
+                return;
+            }
+        } else {
+            std::cerr << "Expected value of TFORM" << i << " is xxxB, but it is "
+                      << value << std::endl;
+            return;
+        }
+    }
+
+    // Get number of events in file
+    status = 0;
+    LONGLONG n_rows;
+    if (fits_get_num_rowsll(fits_, &n_rows, &status)) {
+        std::cerr << "Cannot read the number of rows "
+                  << fitsutils::ErrorMessage(status) << std::endl;
+        return;
+    }
+    n_events_ = static_cast<size_t>(n_rows);
+
+    // Obtain the modules that were active and obtain the hardcoded module situation
+    std::set<uint8_t> active_modules;
+    for (uint32_t ipack=0; ipack < n_packets_per_event_; ipack++) {
+        active_modules.insert(ReadPacket(0, ipack)->GetSlotID());
+    }
+    sstcam::interfaces::GetHardcodedModuleSituation(
+        active_modules, n_pixels_, first_active_module_slot_);
+
+    // Get n_samples from first packet
+    n_samples_ = ReadPacket(0, 0)->GetWaveformNSamples();
+
+    // Get scale and offset to return to float from uint16
+    if (IsR1()) {
+        scale_ = fitsutils::GetHeaderKeyValue<float, TFLOAT>(fits_, "SCALE");
+        offset_ = fitsutils::GetHeaderKeyValue<float, TFLOAT>(fits_, "OFFSET");
+    }
 
     std::cout << "[TIOReader] Path: " << GetPath() << std::endl;
     std::cout << "[TIOReader] RunID: " << GetRunID() << std::endl;
     std::cout << "[TIOReader] CameraVersion: " << GetCameraVersion() << std::endl;
     std::cout << "[TIOReader] IsR1: " << std::boolalpha << IsR1() << std::endl;
     std::cout << "[TIOReader] ActiveModuleSlots: ";
-    for (uint8_t slot: run_header_->active_modules) {
+    for (uint8_t slot: active_modules) {
         std::cout << (unsigned) slot << " ";
     }
     std::cout << std::endl;
-    std::cout << "[TIOReader] NEvents: " << GetNEvents() << std::endl;
-    std::cout << "[TIOReader] NPixels: " << run_header_->n_pixels << std::endl;
-    std::cout << "[TIOReader] NSamples: " << run_header_->n_samples << std::endl;
-}
-
-void TIOReader::CreateWaveformRunHeader() {
-    auto n_packets_per_event = static_cast<size_t>(n_event_columns_ - n_event_headers_);
-    size_t packet_size = ExtractPacketSize();
-    std::set<uint8_t> active_modules = ExtractActiveModules(n_packets_per_event, packet_size);
-    size_t n_samples = ExtractNSamples(packet_size);
-
-    if (IsR1()) {
-        auto scale = fitsutils::GetHeaderKeyValue<float, TFLOAT>(fits_, "SCALE");
-        auto offset = fitsutils::GetHeaderKeyValue<float, TFLOAT>(fits_, "OFFSET");
-        run_header_ = std::make_shared<WaveformRunHeader>(
-            n_packets_per_event, packet_size, active_modules, n_samples,
-            true, scale, offset);
-    } else {
-        run_header_ = std::make_shared<WaveformRunHeader>(
-            n_packets_per_event, packet_size,active_modules, n_samples);
-    }
-}
-
-size_t TIOReader::ExtractPacketSize() const {
-    size_t packet_size = 0;
-    int status = 0;
-    char comment[FLEN_COMMENT];
-    char value[FLEN_VALUE];
-    char tform[FLEN_KEYWORD];
-
-    for (int i = n_event_headers_; i < n_event_columns_; ++i) {
-        snprintf(tform, FLEN_KEYWORD, "TFORM%d", i + 1);
-        if (fits_read_key_str(fits_, tform, value, comment, &status)) {
-            std::cerr << "Cannot read TFORM" << i + 1 << " "
-                      << fitsutils::ErrorMessage(status) << std::endl;
-            return 0;
-        }
-
-        uint16_t packet_size_i;
-        if (sscanf(value, "%" SCNu16 "B", &packet_size_i) == 1) {
-            if (packet_size == 0) {
-                packet_size = packet_size_i;
-            }
-            else if (packet_size_i != packet_size) {
-                std::cerr << "Expected value of TFORM" << i << " is "
-                          << packet_size << "B, but it is " << value << std::endl;
-                return 0;
-            }
-        } else {
-            std::cerr << "Expected value of TFORM" << i << " is xxxB, but it is "
-                      << value << std::endl;
-            return 0;
-        }
-    }
-    return packet_size;
-}
-
-std::set<uint8_t> TIOReader::ExtractActiveModules(size_t n_packets_per_event, size_t packet_size) const {
-    WaveformDataPacket packet(packet_size);
-    std::set<uint8_t> active_modules;
-    for (uint32_t ipack =0; ipack < n_packets_per_event; ipack++) {
-        AssociatePacket(packet, ipack, 0);
-        active_modules.insert(packet.GetSlotID());
-    }
-    return active_modules;
-}
-
-size_t TIOReader::ExtractNSamples(size_t packet_size) const{
-    WaveformDataPacket packet(packet_size);
-    AssociatePacket(packet, 0, 0);
-    return packet.GetWaveformNSamples();
+    std::cout << "[TIOReader] NEvents: " << n_events_ << std::endl;
+    std::cout << "[TIOReader] NPixels: " << n_pixels_ << std::endl;
+    std::cout << "[TIOReader] NSamples: " << n_samples_ << std::endl;
 }
 
 void TIOReader::Close() {
@@ -179,34 +180,106 @@ std::string TIOReader::GetPath() const {
     return std::string(fits_->Fptr->filename);
 }
 
-uint32_t TIOReader::GetNEvents() const {
-    if (!IsOpen()) {
-        std::cerr << "File is not open" << std::endl;
-        return 0u;
-    }
-
-    int status = 0;
-    int hdutype = BINARY_TBL;
-    if (fits_movabs_hdu(fits_, event_hdu_num_, &hdutype, &status)) {
-        std::cerr << "Cannot move to the event HDU "
-                  << fitsutils::ErrorMessage(status) << std::endl;
-        return 0u;
-    }
-
-    status = 0;
-    LONGLONG n_rows;
-    if (fits_get_num_rowsll(fits_, &n_rows, &status)) {
-        std::cerr << "Cannot read the number of rows "
-                  << fitsutils::ErrorMessage(status) << std::endl;
-        return 0u;
-    }
-
-    return static_cast<uint32_t>(n_rows);
+uint32_t TIOReader::GetRunID() const {
+    return fitsutils::GetHeaderKeyValue<int32_t, TINT>(fits_, "RUNNUMBER");
 }
 
-void TIOReader::AssociatePacket(WaveformDataPacket& packet, uint16_t packet_id, uint32_t event_index) const {
+bool TIOReader::IsR1() const {
+    if (fitsutils::HasHeaderKey(fits_, "R1")) {
+        return fitsutils::GetHeaderKeyValue<bool, TLOGICAL>(fits_, "R1");
+    } else {
+        return false;
+    }
+}
+
+std::string TIOReader::GetCameraVersion() const {
+    auto camera_version = fitsutils::GetHeaderKeyValue<
+        std::string, TSTRING>(fits_, "CAMERAVERSION");
+    return camera_version.empty() ? "1.1.0" : camera_version; // Default = CHEC-S;
+}
+
+WaveformEventR0 TIOReader::GetEventR0(uint32_t event_index) const {
+    WaveformEventR0 event(n_packets_per_event_, n_pixels_,
+                          first_active_module_slot_);
+    for (uint32_t ipack = 0; ipack < n_packets_per_event_; ipack++) {
+        event.AddPacketShared(ReadPacket(event_index, ipack));
+    }
+    return event;
+}
+
+WaveformEventR1 TIOReader::GetEventR1(uint32_t event_index) const {
+    WaveformEventR1 event(n_packets_per_event_, n_pixels_,
+                          first_active_module_slot_, scale_, offset_);
+    for (uint32_t ipack = 0; ipack < n_packets_per_event_; ipack++) {
+        event.AddPacketShared(ReadPacket(event_index, ipack));
+    }
+    return event;
+}
+
+uint32_t TIOReader::GetEventID(uint32_t event_index) const {
+    MoveToEventHDU();
+    uint32_t event_id;
+    int status = 0;
+    fits_read_col(fits_, TUINT, 1, event_index + 1, 1, 1, nullptr,
+                  &event_id, nullptr, &status);
+    if (status != 0) {
+        std::cerr << "Error reading Event ID from file" << std::endl;
+        return 0;
+    }
+    return event_id;
+}
+
+uint64_t TIOReader::GetEventTACK(uint32_t event_index) const {
+    MoveToEventHDU();
+    uint32_t tack32msb, tack32lsb;
+    int status = 0;
+    fits_read_col(fits_, TUINT, 2, event_index + 1, 1, 1, nullptr,
+                  &tack32msb, nullptr, &status);
+    fits_read_col(fits_, TUINT, 3, event_index + 1, 1, 1, nullptr,
+                  &tack32lsb, nullptr, &status);
+    if (status != 0) {
+        std::cerr << "Error reading event TACK from file" << std::endl;
+        return 0;
+    }
+    return (static_cast<uint64_t>(tack32msb) << 32u) | static_cast<uint64_t>(tack32lsb);
+}
+
+uint16_t TIOReader::GetEventNPacketsFilled(uint32_t event_index) const{
+    MoveToEventHDU();
+    int status = 0;
+    uint16_t n_filled = 0;
+    fits_read_col(fits_, TUSHORT, 4, event_index + 1, 1, 1, nullptr,
+                  &n_filled, nullptr, &status);
+    if (status != 0) {
+        std::cerr << "Error reading Event 'Number of Packets Filled' "
+                     "from file" << std::endl;
+        return 0;
+    }
+    return n_filled;
+}
+
+time_point TIOReader::GetEventCPUTimestamp(uint32_t event_index) const {
+    MoveToEventHDU();
+    int status = 0;
+    int64_t cpu_int_s, cpu_int_ns;
+    fits_read_col(fits_, TLONGLONG, 5, event_index + 1, 1, 1, nullptr,
+                  &cpu_int_s, nullptr, &status);
+    fits_read_col(fits_, TLONGLONG, 6, event_index + 1, 1, 1, nullptr,
+                  &cpu_int_ns, nullptr, &status);
+    if (status != 0) {
+        std::cerr << "Error reading event CPU timestamp from file" << std::endl;
+        return time_point(std::chrono::seconds(0));
+    }
+    std::chrono::seconds cpu_s(cpu_int_s);
+    std::chrono::microseconds cpu_ns(cpu_int_ns / 1000);
+    time_point cpu_time(cpu_s + cpu_ns);
+    return cpu_time;
+}
+
+int TIOReader::MoveToEventHDU() const {
     if (!IsOpen()) {
         std::cerr << "File is not open" << std::endl;
+        return 1;
     }
 
     int status = 0;
@@ -214,17 +287,27 @@ void TIOReader::AssociatePacket(WaveformDataPacket& packet, uint16_t packet_id, 
     if (fits_movabs_hdu(fits_, event_hdu_num_, &hdutype, &status)) {
         std::cerr << "Cannot move to the event HDU "
                   << fitsutils::ErrorMessage(status) << std::endl;
+        return 1;
     }
+    return 0;
+}
 
-    status = 0;
+std::shared_ptr<WaveformDataPacket> TIOReader::ReadPacket(
+        uint32_t event_index, uint16_t packet_id) const {
+    auto packet = std::make_shared<WaveformDataPacket>(packet_size_);
+
+    MoveToEventHDU();
+
+    int status = 0;
     int anynull;
     if (fits_read_col(fits_, TBYTE, packet_id + n_event_headers_ + 1,
-                      event_index + 1, 1, packet.GetPacketSize(), nullptr,
-                      packet.GetDataPacket(), &anynull, &status)) {
+                      event_index + 1, 1, packet->GetPacketSize(), nullptr,
+                      packet->GetDataPacket(), &anynull, &status)) {
         std::cerr << "Cannot read the " << packet_id << "th packet of "
                   << "the " << event_index << "th event "
                   << fitsutils::ErrorMessage(status);
     }
+    return packet;
 }
 
 

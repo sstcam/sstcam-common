@@ -8,8 +8,7 @@
 #include "sstcam/interfaces/WaveformDataPacket.h"
 #include "sstcam/interfaces/Waveform.h"
 #include "sstcam/interfaces/WaveformEvent.h"
-#include <string>
-#include <fitsio.h>
+#include <chrono>
 
 
 namespace sstcam {
@@ -17,9 +16,9 @@ namespace io {
 
 using WaveformDataPacket = sstcam::interfaces::WaveformDataPacket;
 using Waveform = sstcam::interfaces::Waveform;
-using WaveformRunHeader = sstcam::interfaces::WaveformRunHeader;
 using WaveformEventR0 = sstcam::interfaces::WaveformEventR0;
 using WaveformEventR1 = sstcam::interfaces::WaveformEventR1;
+using time_point = std::chrono::time_point<std::chrono::system_clock>;
 
 
 class TIOReader {
@@ -32,74 +31,50 @@ public:
 
     bool IsOpen() const { return fits_ != nullptr; }
 
-    std::shared_ptr<WaveformRunHeader> GetRunHeader() const { return run_header_; }
-
     std::string GetPath() const;
 
-    uint32_t GetNEvents() const;
+    size_t GetNEvents() const { return n_events_; }
 
-    uint32_t GetRunID() const {
-        return fitsutils::GetHeaderKeyValue<int32_t, TINT>(fits_, "RUNNUMBER");
-    }
+    size_t GetNPixels() const { return n_pixels_; }
 
-    bool IsR1() const {
-        if (fitsutils::HasHeaderKey(fits_, "R1")) {
-            return fitsutils::GetHeaderKeyValue<bool, TLOGICAL>(fits_, "R1");
-        } else {
-            return false;
-        }
-    }
+    size_t GetNSamples() const { return n_samples_; }
 
-    std::string GetCameraVersion() const {
-        auto camera_version = fitsutils::GetHeaderKeyValue<std::string, TSTRING>(fits_, "CAMERAVERSION");
-        return camera_version.empty() ? "1.1.0" : camera_version; // Default = CHEC-S;
-    }
+    uint32_t GetRunID() const;
 
-    WaveformEventR0 GetEventR0(uint32_t event_index) const {
-        return GetEvent<WaveformEventR0>(event_index);
-    }
+    bool IsR1() const;
 
-    WaveformEventR1 GetEventR1(uint32_t event_index) const {
-        return GetEvent<WaveformEventR1>(event_index);
-    }
+    std::string GetCameraVersion() const;
+
+    WaveformEventR0 GetEventR0(uint32_t event_index) const;
+
+    WaveformEventR1 GetEventR1(uint32_t event_index) const;
+
+    uint32_t GetEventID(uint32_t event_index) const;
+
+    uint64_t GetEventTACK(uint32_t event_index) const;
+
+    uint16_t GetEventNPacketsFilled(uint32_t event_index) const;
+
+    std::chrono::system_clock::time_point GetEventCPUTimestamp(uint32_t event_index) const;
+
 
 private:
-    std::shared_ptr<WaveformRunHeader> run_header_;
-
     fitsfile* fits_;
     int32_t event_hdu_num_;
-    long n_event_columns_;
     uint8_t n_event_headers_;
+    size_t n_packets_per_event_;
+    size_t packet_size_;
+    size_t n_events_;
+    size_t n_pixels_;
+    size_t n_samples_;
+    uint8_t first_active_module_slot_;
+    float scale_;
+    float offset_;
 
-    void CreateWaveformRunHeader();
+    int MoveToEventHDU() const;
 
-    size_t ExtractPacketSize() const;
-
-    std::set<uint8_t> ExtractActiveModules(size_t n_packets_per_event, size_t packet_size) const;
-
-    size_t ExtractNSamples(size_t packet_size) const;
-
-    void AssociatePacket(WaveformDataPacket& packet, uint16_t packet_id, uint32_t event_index) const;
-
-    template<typename T>
-    T GetEvent(uint32_t event_index) const {
-        T event(run_header_);
-
-        event.index = event_index;
-
-        // TODO: fill missing header values
-
-        // TODO: Check difference in tack between header and packet
-
-        for (uint32_t ipack = 0; ipack < event.packets.size(); ipack++) {
-            AssociatePacket(event.packets[ipack], ipack, event_index);
-        }
-
-        event.SetEventHeaderFromPackets();
-
-        return event;
-    }
-
+    std::shared_ptr<WaveformDataPacket> ReadPacket(
+        uint32_t event_index, uint16_t packet_id) const;
 };
 
 }

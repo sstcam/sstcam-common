@@ -75,9 +75,6 @@ T GetHeaderKeyValue(fitsfile* fits_, const std::string& key) {
     }
 }
 
-//template <>
-//std::string GetHeaderKeyValue<std::string, TSTRING>(fitsfile* fits_, const std::string& key);
-
 }}}
 
 #endif  // SSTCAM_IO_FITSUTILS_H_

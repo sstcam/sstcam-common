@@ -21,7 +21,7 @@ void tio_reader(py::module &m) {
     tio_reader.def("GetRunID", &TIOReader::GetRunID);
     tio_reader.def("IsR1", &TIOReader::IsR1);
     tio_reader.def("GetCameraVersion", &TIOReader::GetCameraVersion);
-    tio_reader.def("GetRunHeader", &TIOReader::GetRunHeader);
+//    tio_reader.def("GetRunHeader", &TIOReader::GetRunHeader);
     tio_reader.def("GetEventR0", &TIOReader::GetEventR0);
     tio_reader.def("GetEventR1", &TIOReader::GetEventR1);
 }
