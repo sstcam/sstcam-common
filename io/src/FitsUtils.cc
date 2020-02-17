@@ -3,17 +3,18 @@
 
 #include "sstcam/io/FitsUtils.h"
 #include <iostream>
+#include <sstream>
 
 namespace sstcam {
 namespace io {
 namespace fitsutils {
 
 std::string ErrorMessage(int status) {
-    static char error[100], error2[100];
+    static char error[100];
     fits_get_errstatus(status, error);
-    snprintf(error2, sizeof(error2), "(FITSIO: %s)", error);
-
-    return std::string(error2);
+    std::ostringstream ss;
+    ss << "(FITSIO: " << error << ")";
+    return ss.str();
 }
 
 bool HasHeaderKey(fitsfile* fits_, const std::string& key) {
