@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.11...3.16)
 
 project(sstcam-common)
+message(STATUS "Configuring sstcam-descriptions")
+add_subdirectory(descriptions)
 message(STATUS "Configuring sstcam-io")
 add_subdirectory(io)
 

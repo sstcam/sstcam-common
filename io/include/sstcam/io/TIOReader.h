@@ -1,23 +1,23 @@
-// Copyright 2019 Cherenkov Telescope Array Observatory
+// Copyright 2020 Cherenkov Telescope Array Observatory
 // This software is distributed under the terms of the BSD-3-Clause license.
 
 #ifndef SSTCAM_IO_TIOREADER_H_
 #define SSTCAM_IO_TIOREADER_H_
 
 #include "sstcam/io/FitsUtils.h"
-#include "sstcam/interfaces/WaveformDataPacket.h"
-#include "sstcam/interfaces/Waveform.h"
-#include "sstcam/interfaces/WaveformEvent.h"
+#include "sstcam/descriptions/WaveformDataPacket.h"
+#include "sstcam/descriptions/Waveform.h"
+#include "sstcam/descriptions/WaveformEvent.h"
 #include <chrono>
 
 
 namespace sstcam {
 namespace io {
 
-using WaveformDataPacket = sstcam::interfaces::WaveformDataPacket;
-using Waveform = sstcam::interfaces::Waveform;
-using WaveformEventR0 = sstcam::interfaces::WaveformEventR0;
-using WaveformEventR1 = sstcam::interfaces::WaveformEventR1;
+using WaveformDataPacket = sstcam::descriptions::WaveformDataPacket;
+using Waveform = sstcam::descriptions::Waveform;
+using WaveformEventR0 = sstcam::descriptions::WaveformEventR0;
+using WaveformEventR1 = sstcam::descriptions::WaveformEventR1;
 using time_point = std::chrono::time_point<std::chrono::system_clock>;
 
 

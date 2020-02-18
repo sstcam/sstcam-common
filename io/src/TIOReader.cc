@@ -1,4 +1,4 @@
-// Copyright 2019 Cherenkov Telescope Array Observatory
+// Copyright 2020 Cherenkov Telescope Array Observatory
 // This software is distributed under the terms of the BSD-3-Clause license.
 
 #include "sstcam/io/TIOReader.h"
@@ -131,7 +131,7 @@ TIOReader::TIOReader(const std::string& path)
     for (uint32_t ipack=0; ipack < n_packets_per_event_; ipack++) {
         active_modules.insert(ReadPacket(0, ipack)->GetSlotID());
     }
-    sstcam::interfaces::GetHardcodedModuleSituation(
+    sstcam::descriptions::GetHardcodedModuleSituation(
         active_modules, n_pixels_, first_active_module_slot_);
 
     // Get n_samples from first packet
