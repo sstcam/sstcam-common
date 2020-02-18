@@ -40,6 +40,7 @@ cmake-build-*
 
 # Python
 __pycache__
+.pytest_cache
 
 # OSX
 *.DS_Store
