@@ -55,7 +55,9 @@ public:
 
     uint16_t GetEventNPacketsFilled(uint32_t event_index) const;
 
-    std::chrono::system_clock::time_point GetEventCPUTimestamp(uint32_t event_index) const;
+    int64_t GetEventCPUSecond(uint32_t event_index) const;
+
+    int64_t GetEventCPUNanosecond(uint32_t event_index) const;
 
 
 private:

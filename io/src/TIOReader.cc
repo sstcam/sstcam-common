@@ -8,7 +8,7 @@
 #include <memory>
 #include <set>
 #include <cstring>
-#include <fitsio.h>
+#include <cfitsio/fitsio.h>
 
 namespace sstcam {
 namespace io {
@@ -258,22 +258,30 @@ uint16_t TIOReader::GetEventNPacketsFilled(uint32_t event_index) const{
     return n_filled;
 }
 
-time_point TIOReader::GetEventCPUTimestamp(uint32_t event_index) const {
+int64_t TIOReader::GetEventCPUSecond(uint32_t event_index) const {
     MoveToEventHDU();
     int status = 0;
-    int64_t cpu_int_s, cpu_int_ns;
+    int64_t cpu_s = 0;
     fits_read_col(fits_, TLONGLONG, 5, event_index + 1, 1, 1, nullptr,
-                  &cpu_int_s, nullptr, &status);
-    fits_read_col(fits_, TLONGLONG, 6, event_index + 1, 1, 1, nullptr,
-                  &cpu_int_ns, nullptr, &status);
+                  &cpu_s, nullptr, &status);
     if (status != 0) {
-        std::cerr << "Error reading event CPU timestamp from file" << std::endl;
-        return time_point(std::chrono::seconds(0));
+        std::cerr << "Error reading event CPU timestamp (seconds) from file" << std::endl;
+        return 0;
     }
-    std::chrono::seconds cpu_s(cpu_int_s);
-    std::chrono::microseconds cpu_ns(cpu_int_ns / 1000);
-    time_point cpu_time(cpu_s + cpu_ns);
-    return cpu_time;
+    return cpu_s;
+}
+
+int64_t TIOReader::GetEventCPUNanosecond(uint32_t event_index) const {
+    MoveToEventHDU();
+    int status = 0;
+    int64_t cpu_ns = 0;
+    fits_read_col(fits_, TLONGLONG, 6, event_index + 1, 1, 1, nullptr,
+                  &cpu_ns, nullptr, &status);
+    if (status != 0) {
+        std::cerr << "Error reading event CPU timestamp (nanosecond) from file" << std::endl;
+        return 0;
+    }
+    return cpu_ns;
 }
 
 int TIOReader::MoveToEventHDU() const {
