@@ -146,6 +146,7 @@ public:
         Waveform waveform;
 
         for (WaveformDataPacket* packet : packets_) {
+            if (!packet) continue;
             uint16_t n_waveforms = packet->GetNWaveforms();
             uint8_t module = packet->GetSlotID() - first_active_module_slot_;
             for (unsigned short iwav = 0; iwav < n_waveforms; iwav++) {
@@ -209,8 +210,7 @@ private:
         for (WaveformDataPacket* packet : packets_) {
             if (packet && !packet->IsEmpty()) return packet;
         }
-        std::cerr << "No filled WaveformDataPacket found in event" << std::endl;
-        return nullptr;
+        throw std::runtime_error("WaveformEvent is empty");
     }
 };
 

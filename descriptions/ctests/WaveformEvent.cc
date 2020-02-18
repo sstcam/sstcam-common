@@ -60,6 +60,27 @@ TEST_CASE("WaveformEvent") {
         CHECK(event.IsEmpty());
     }
 
+    SUBCASE("Empty Event Getters") {
+        WaveformEventR0 event(n_packets_per_event);
+        REQUIRE(event.IsEmpty());
+        CHECK_THROWS_AS(event.GetNSamples(), std::runtime_error);
+        CHECK_THROWS_AS(event.GetFirstCellID(), std::runtime_error);
+        CHECK_THROWS_AS(event.GetTACK(), std::runtime_error);
+        CHECK_THROWS_AS(event.IsStale(), std::runtime_error);
+        CHECK_THROWS_AS(event.GetWaveforms(), std::runtime_error);
+    }
+
+    SUBCASE("Half Empty Event Getters") {
+        WaveformEventR0 event(2);
+        event.AddPacket(packet.get());
+        REQUIRE(!event.IsEmpty());
+        REQUIRE(!event.IsFilled());
+        CHECK(event.GetNSamples() == 128);
+        CHECK(event.GetFirstCellID() == 1448);
+        CHECK(event.GetTACK() == 2165717354592);
+        CHECK(!event.IsStale());
+    }
+
     SUBCASE("WaveformEventR0 Adding Packets") {
         WaveformEventR0 event(n_packets_per_event);
         CHECK(event.IsEmpty());
@@ -190,21 +211,51 @@ TEST_CASE("WaveformEvent") {
     SUBCASE("WaveformEventR0 Waveforms") {
         std::vector<uint16_t> waveforms = event_r0.GetWaveforms();
         bool none_zero = true;
-        for (size_t ipix = 0; ipix < n_pixels; ipix++) {
+        for (size_t ipix = 0; ipix < 32; ipix++) {
             for (size_t isam = 0; isam < n_samples; isam++) {
-                if (ipix >= 32) continue;
                 if (waveforms[ipix * n_samples + isam] == 0) none_zero = false;
             }
         }
         CHECK(none_zero);
+
+        bool all_zero = true;
+        for (size_t ipix = 32; ipix < n_pixels; ipix++) {
+            for (size_t isam = 0; isam < n_samples; isam++) {
+                if (waveforms[ipix * n_samples + isam] != 0) all_zero = false;
+            }
+        }
+        CHECK(all_zero);
+    }
+
+    SUBCASE("WaveformEventR0 Waveforms (not fully filled)") {
+        WaveformEventR0 event_r0_2(2, n_pixels, first_active_module_slot);
+        event_r0_2.AddPacket(packet.get());
+        REQUIRE(!event_r0_2.IsEmpty());
+        REQUIRE(!event_r0_2.IsFilled());
+
+        std::vector<uint16_t> waveforms = event_r0_2.GetWaveforms();
+        bool none_zero = true;
+        for (size_t ipix = 0; ipix < 32; ipix++) {
+            for (size_t isam = 0; isam < n_samples; isam++) {
+                if (waveforms[ipix * n_samples + isam] == 0) none_zero = false;
+            }
+        }
+        CHECK(none_zero);
+
+        bool all_zero = true;
+        for (size_t ipix = 32; ipix < n_pixels; ipix++) {
+            for (size_t isam = 0; isam < n_samples; isam++) {
+                if (waveforms[ipix * n_samples + isam] != 0) all_zero = false;
+            }
+        }
+        CHECK(all_zero);
     }
 
     SUBCASE("WaveformEventR1 Waveforms") {
         std::vector<float> waveforms = event_r1.GetWaveforms();
         bool none_zero = true;
-        for (size_t ipix = 0; ipix < n_pixels; ipix++) {
+        for (size_t ipix = 0; ipix < 32; ipix++) {
             for (size_t isam = 0; isam < n_samples; isam++) {
-                if (ipix >= 32) continue;
                 if (waveforms[ipix * n_samples + isam] == 0) none_zero = false;
             }
         }
