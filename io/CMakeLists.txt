@@ -40,18 +40,9 @@ python_module(${PYTARGET} ${LIBTARGET} io "${PYTHON_SRC}")
 
 # ctests
 add_library(test_main_io OBJECT ctests/test_main.cc)
-
-add_executable(test_FitsUtils ctests/FitsUtils.cc $<TARGET_OBJECTS:test_main>)
-add_test(NAME test_FitsUtils COMMAND test_FitsUtils)
-target_link_libraries(test_FitsUtils ${LIBTARGET})
-target_include_directories(test_FitsUtils PUBLIC ctests)
-target_compile_features(test_FitsUtils PRIVATE cxx_std_11)
-
-add_executable(test_TIOReader ctests/TIOReader.cc $<TARGET_OBJECTS:test_main>)
-add_test(NAME test_TIOReader COMMAND test_TIOReader)
-target_link_libraries(test_TIOReader ${LIBTARGET})
-target_include_directories(test_TIOReader PUBLIC ctests)
-target_compile_features(test_TIOReader PRIVATE cxx_std_11)
+target_include_directories(test_main_io PUBLIC ctests ${DOCTEST_INCLUDE_DIR})
+sstcam_tests(test_FitsUtils ctests/FitsUtils.cc test_main ${LIBTARGET})
+sstcam_tests(test_TIOReader ctests/TIOReader.cc test_main ${LIBTARGET})
 
 # Compilation options
 target_compile_options(${LIBTARGET} PUBLIC -O2 -Wall -pedantic -Werror -Wextra)
