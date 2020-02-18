@@ -6,6 +6,7 @@
 
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <fitsio.h>
 
 namespace sstcam {
@@ -17,37 +18,29 @@ namespace io {
 namespace fitsutils {
 
 
-std::string ErrorMessage(int pStatus);
+std::string ErrorMessage(int status);
 
 bool HasHeaderKey(fitsfile* fits_, const std::string& key);
 
 template <typename T, int FITS_DATATYPE>
 T GetHeaderKeyValue(fitsfile* fits_, const std::string& key) {
-    T error_return_value;
-    if constexpr(std::is_same<T, std::string>::value) {
-        error_return_value = "";
-    } else {
-        error_return_value = static_cast<T>(0);
-    }
-
-    if (fits_ == nullptr) {
-        std::cerr << "File is not open" << std::endl;
-        return error_return_value;
-    }
+    if (fits_ == nullptr) throw std::runtime_error("FITS file is not open");
 
     int status = 0;
     int hdutype = IMAGE_HDU;
     // Move to primary HDU header
     if (fits_movabs_hdu(fits_, 1, &hdutype, &status)) {
-        std::cerr << "Cannot move to the primary HDU " << ErrorMessage(status) << std::endl;
-        return error_return_value;
+        std::ostringstream ss;
+        ss << "Cannot move to the primary HDU" << ErrorMessage(status);
+        throw std::runtime_error(ss.str());
     }
 
     char keyvalue[FLEN_VALUE], comment[FLEN_COMMENT];
     status = 0;
     if (fits_read_keyword(fits_, key.c_str(), keyvalue, comment, &status)) {
-        std::cerr << "Cannot find the keyword '" << key << "' " << ErrorMessage(status) << std::endl;
-        return error_return_value;
+        std::ostringstream ss;
+        ss << "Cannot find the header keyword:" << key << " " << ErrorMessage(status);
+        throw std::runtime_error(ss.str());
     }
 
     if (key == "COMMENT" || key == "HISTORY") {
@@ -61,15 +54,17 @@ T GetHeaderKeyValue(fitsfile* fits_, const std::string& key) {
     if constexpr(std::is_same<T, std::string>::value) {
         char value[81];
         if (fits_read_key(fits_, TSTRING, key.c_str(), value, comment, &status)) {
-            std::cerr << "Cannot read the keyword '" << key << "' " << ErrorMessage(status) << std::endl;
-            return error_return_value;
+            std::ostringstream ss;
+            ss << "Cannot read the header keyword:" << key << " " << ErrorMessage(status);
+            throw std::runtime_error(ss.str());
         }
         return std::string(value);
     } else {
         T value;
         if (fits_read_key(fits_, FITS_DATATYPE, key.c_str(), &value, comment, &status)) {
-            std::cerr << "Cannot read the keyword '" << key << "' " << ErrorMessage(status) << std::endl;
-            return error_return_value;
+            std::ostringstream ss;
+            ss << "Cannot read the header keyword:" << key << " " << ErrorMessage(status);
+            throw std::runtime_error(ss.str());
         }
         return value;
     }

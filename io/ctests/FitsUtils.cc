@@ -39,20 +39,20 @@ TEST_CASE("FitsUtils") {
 
     SUBCASE("GetHeaderKeyValue missing") {
         std::string key;
-        auto value_int = GetHeaderKeyValue<int32_t, TINT>(fits_, key);
-            CHECK(value_int == 0);
+        constexpr auto GetHeaderInt = GetHeaderKeyValue<int32_t, TINT>;
+        CHECK_THROWS(GetHeaderInt(fits_, key));
 
-        auto value_float = GetHeaderKeyValue<float, TFLOAT>(fits_, key);
-            CHECK(value_float == 0.0f);
+        constexpr auto GetHeaderFloat = GetHeaderKeyValue<float, TFLOAT>;
+        CHECK_THROWS(GetHeaderFloat(fits_, key));
 
-        auto value_double = GetHeaderKeyValue<double, TDOUBLE>(fits_, key);
-            CHECK(value_double == 0);
+        constexpr auto GetHeaderDouble = GetHeaderKeyValue<double, TDOUBLE>;
+        CHECK_THROWS(GetHeaderDouble(fits_, key));
 
-        auto value_bool = GetHeaderKeyValue<bool, TLOGICAL>(fits_, key);
-            CHECK(!value_bool);
+        constexpr auto GetHeaderBool = GetHeaderKeyValue<bool, TLOGICAL>;
+        CHECK_THROWS(GetHeaderBool(fits_, key));
 
-        auto value_string = GetHeaderKeyValue<std::string, TSTRING>(fits_, key);
-            CHECK(value_string == "");
+        constexpr auto GetHeaderString = GetHeaderKeyValue<std::string, TSTRING>;
+        CHECK_THROWS(GetHeaderString(fits_, key));
     }
 
     SUBCASE("GetHeaderKeyValue comment") {
@@ -75,20 +75,8 @@ TEST_CASE("FitsUtils") {
 
     SUBCASE("GetHeaderKeyValue history") {
         std::string key = "HISTORY";
-        auto value_int = GetHeaderKeyValue<int32_t, TINT>(fits_, key);
-        CHECK(value_int == 0);
-
-        auto value_float = GetHeaderKeyValue<float, TFLOAT>(fits_, key);
-        CHECK(value_float == 0.0f);
-
-        auto value_double = GetHeaderKeyValue<double, TDOUBLE>(fits_, key);
-        CHECK(value_double == 0);
-
-        auto value_bool = GetHeaderKeyValue<bool, TLOGICAL>(fits_, key);
-        CHECK(!value_bool);
-
-        auto value_string = GetHeaderKeyValue<std::string, TSTRING>(fits_, key);
-        CHECK(value_string == "");
+        constexpr auto GetHeaderString = GetHeaderKeyValue<std::string, TSTRING>;
+        CHECK_THROWS(GetHeaderString(fits_, key));
     }
 
     SUBCASE("GetHeaderKeyValue int") {
@@ -150,14 +138,15 @@ TEST_CASE("FitsUtils") {
 
     SUBCASE("GetHeaderKeyValue string") {
         std::string key = "OBSERVER";
-        auto value_int = GetHeaderKeyValue<int32_t, TINT>(fits_, key);
-        CHECK(value_int == 0);
 
-        auto value_float = GetHeaderKeyValue<float, TFLOAT>(fits_, key);
-        CHECK(value_float == 0.0f);
+        constexpr auto GetHeaderInt = GetHeaderKeyValue<int32_t, TINT>;
+        CHECK_THROWS(GetHeaderInt(fits_, key));
 
-        auto value_double = GetHeaderKeyValue<double, TDOUBLE>(fits_, key);
-        CHECK(value_double == 0.0);
+        constexpr auto GetHeaderFloat = GetHeaderKeyValue<float, TFLOAT>;
+        CHECK_THROWS(GetHeaderFloat(fits_, key));
+
+        constexpr auto GetHeaderDouble = GetHeaderKeyValue<double, TDOUBLE>;
+        CHECK_THROWS(GetHeaderDouble(fits_, key));
 
         auto value_bool = GetHeaderKeyValue<bool, TLOGICAL>(fits_, key);
         CHECK(!value_bool);
