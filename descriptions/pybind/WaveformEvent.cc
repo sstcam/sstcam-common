@@ -35,6 +35,8 @@ template<typename T, typename TEvent>
 void waveform_event_template(py::module &m, const std::string& name) {
     py::class_<TEvent> waveform_event(m, name.c_str());
     waveform_event.def(py::init<size_t, size_t, uint8_t>());
+    waveform_event.def(py::init<size_t, size_t, uint8_t, float, float>());
+    waveform_event.def("AddPacketShared", &TEvent::AddPacketShared);
     waveform_event.def("GetWaveforms", GetWaveforms<T, TEvent>);
     waveform_event.def("GetPackets", &TEvent::GetPackets);
     waveform_event.def("GetNPixels", &TEvent::GetNPixels);

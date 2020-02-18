@@ -16,7 +16,7 @@ py::array_t<uint8_t> GetDataPacket(const WaveformDataPacket& packet) {
 }
 
 void waveform_data_packet(py::module &m) {
-    py::class_<WaveformDataPacket> datapacket(m, "WaveformDataPacket");
+    py::class_<WaveformDataPacket, std::shared_ptr<WaveformDataPacket>> datapacket(m, "WaveformDataPacket");
     datapacket.def(py::init<size_t>());
     datapacket.def("GetDataPacket", &GetDataPacket, py::return_value_policy::reference_internal);
     datapacket.def("GetPacketSize", &WaveformDataPacket::GetPacketSize);

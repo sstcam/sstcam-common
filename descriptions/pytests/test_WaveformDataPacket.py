@@ -33,7 +33,7 @@ def test_getters(packet):
     assert not data_packet.IsLastSubPacket()
     assert data_packet.IsFirstSubPacket()
     assert data_packet.GetNBuffers() == 8
-    assert data_packet.GetTACKTime() == 2165717354592
+    assert data_packet.GetTACK() == 2165717354592
     assert data_packet.GetEventNumber() == 18528
     assert data_packet.GetSlotID() == 22
     assert data_packet.GetDetectorID() == 22
