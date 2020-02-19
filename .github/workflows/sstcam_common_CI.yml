@@ -12,9 +12,12 @@ jobs:
       with:
         repository: sstcam/sstcam-build
         token: ${{ secrets.SSTCAM_PAT }}
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.6
     - name: Install dependencies
       run: |
-          sudo apt install python pip
           pip install pyyaml numpy
           pip install .
     - name: setup build
