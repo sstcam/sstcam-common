@@ -41,8 +41,8 @@ python_module(${PYTARGET} ${LIBTARGET} io "${PYTHON_SRC}")
 # ctests
 add_library(test_main_io OBJECT ctests/test_main.cc)
 target_include_directories(test_main_io PUBLIC ctests ${DOCTEST_INCLUDE_DIR})
-sstcam_tests(test_FitsUtils ctests/FitsUtils.cc test_main ${LIBTARGET})
-sstcam_tests(test_TIOReader ctests/TIOReader.cc test_main ${LIBTARGET})
+sstcam_tests(test_FitsUtils ctests/FitsUtils.cc test_main_io ${LIBTARGET})
+sstcam_tests(test_TIOReader ctests/TIOReader.cc test_main_io ${LIBTARGET})
 
 # Compilation options
 target_compile_options(${LIBTARGET} PUBLIC -O2 -Wall -pedantic -Werror -Wextra)

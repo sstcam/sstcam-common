@@ -41,12 +41,12 @@ set(PYTHON_SRC pybind/module.cc pybind/WaveformDataPacket.cc pybind/Waveform.cc 
 python_module(${PYTARGET} ${LIBTARGET} descriptions "${PYTHON_SRC}")
 
 # ctests
-add_library(test_main OBJECT ctests/test_main.cc)
-target_include_directories(test_main PUBLIC ctests ${DOCTEST_INCLUDE_DIR})
+add_library(test_main_descriptions OBJECT ctests/test_main.cc)
+target_include_directories(test_main_descriptions PUBLIC ctests ${DOCTEST_INCLUDE_DIR})
 
-sstcam_tests(test_WaveformDataPacket ctests/WaveformDataPacket.cc test_main ${LIBTARGET})
-sstcam_tests(test_Waveform ctests/Waveform.cc test_main ${LIBTARGET})
-sstcam_tests(test_WaveformEvent ctests/WaveformEvent.cc test_main ${LIBTARGET})
+sstcam_tests(test_WaveformDataPacket ctests/WaveformDataPacket.cc test_main_descriptions ${LIBTARGET})
+sstcam_tests(test_Waveform ctests/Waveform.cc test_main_descriptions ${LIBTARGET})
+sstcam_tests(test_WaveformEvent ctests/WaveformEvent.cc test_main_descriptions ${LIBTARGET})
 
 # data files
 file(GLOB DATA_FILES "${CMAKE_CURRENT_SOURCE_DIR}/share/sstcam/descriptions/*")
