@@ -28,9 +28,14 @@ jobs:
           cd build
     - name: configure build
       run: |
+        cd project/build
         cmake .. 
           
     - name: make
-      run: make
+      run:  |
+        cd project/build
+        make
     - name: test
-      run: ctest
+      run:   |
+        cd project/build
+        ctest
