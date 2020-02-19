@@ -1,8 +1,8 @@
 // Copyright 2020 Cherenkov Telescope Array Observatory
 // This software is distributed under the terms of the BSD-3-Clause license.
 
-#ifndef SSTCAM_INTERFACES_EVENT_H
-#define SSTCAM_INTERFACES_EVENT_H
+#ifndef SSTCAM_DESCRIPTIONS_EVENT_H
+#define SSTCAM_DESCRIPTIONS_EVENT_H
 
 #include "sstcam/descriptions/WaveformDataPacket.h"
 #include "sstcam/descriptions/Waveform.h"
@@ -228,4 +228,4 @@ using WaveformEventR1 = WaveformEvent<float, GetSampleR1>;
 
 }}
 
-#endif //SSTCAM_INTERFACES_EVENT_H
+#endif //SSTCAM_DESCRIPTIONS_EVENT_H

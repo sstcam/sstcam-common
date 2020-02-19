@@ -11,11 +11,6 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # Save executables to bin directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# Dependencies
-#find_package(sstcam-base REQUIRED)
-
-# find_package(pybind11 REQUIRED)
-
 #if(CMAKE_INSTALL_PREFIX)
 #    set(CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX})
 #endif(CMAKE_INSTALL_PREFIX)
@@ -29,10 +24,15 @@ include(CTest)
 set(HEADER_LIST include/sstcam/io/TIOReader.h include/sstcam/io/FitsUtils.h)
 add_library(${LIBTARGET} SHARED src/TIOReader.cc src/FitsUtils.cc ${HEADER_LIST})
 target_link_libraries(${LIBTARGET} sstcam_descriptions_c ${CFITSIO_LIBRARIES})
-target_include_directories(${LIBTARGET} PUBLIC include ${CFITSIO_INCLUDE_DIRS})
+target_include_directories(${LIBTARGET} PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
+        $<INSTALL_INTERFACE:include/>
+        )
 target_compile_features(${LIBTARGET} PUBLIC cxx_std_11)
-source_group(TREE "${PROJECT_SOURCE_DIR}/include" PREFIX "Header Files" FILES ${HEADER_LIST})
 install (TARGETS ${LIBTARGET} LIBRARY DESTINATION lib)
+
+# Makes it easier for IDEs to find all headers
+source_group(TREE "${PROJECT_SOURCE_DIR}/include" PREFIX "Header Files" FILES ${HEADER_LIST})
 
 # python module
 set(PYTHON_SRC pybind/module.cc pybind/TIOReader.cc)

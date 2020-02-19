@@ -1,8 +1,8 @@
 // Copyright 2020 Cherenkov Telescope Array Observatory
 // This software is distributed under the terms of the BSD-3-Clause license.
 
-#ifndef SSTCAM_INTERFACES_WAVEFORM_H
-#define SSTCAM_INTERFACES_WAVEFORM_H
+#ifndef SSTCAM_DESCRIPTIONS_WAVEFORM_H
+#define SSTCAM_DESCRIPTIONS_WAVEFORM_H
 
 #include "sstcam/descriptions/WaveformDataPacket.h"
 #include <cstdint>
@@ -82,4 +82,4 @@ private:
 }  // namespace sstcam
 
 
-#endif //SSTCAM_INTERFACES_WAVEFORM_H
+#endif //SSTCAM_DESCRIPTIONS_WAVEFORM_H
