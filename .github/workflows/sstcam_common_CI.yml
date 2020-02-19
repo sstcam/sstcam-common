@@ -1,0 +1,33 @@
+name: sstcam-common CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: https://github.com/sstcam/sstcam-build
+        token: ${{ secrets.SSTCAM_PAT }}
+    - name: Install dependencies
+        run: |
+          sudo apt install python3 pip3
+          pip install pyyaml numpy
+          pip install .
+    - name: setup build
+        run: |
+          mkdir project
+          cd project
+          sc-build init
+          cd build
+    - name: configure build
+      run: |
+        cmake .. 
+          
+    - name: make
+      run: make
+    - name: test
+      run: ctest
