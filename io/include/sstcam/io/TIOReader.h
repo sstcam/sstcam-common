@@ -8,7 +8,6 @@
 #include "sstcam/descriptions/WaveformDataPacket.h"
 #include "sstcam/descriptions/Waveform.h"
 #include "sstcam/descriptions/WaveformEvent.h"
-#include <chrono>
 
 
 namespace sstcam {
@@ -73,7 +72,7 @@ private:
     float scale_;
     float offset_;
 
-    int MoveToEventHDU() const;
+    void MoveToEventHDU() const;
 
     std::shared_ptr<WaveformDataPacket> ReadPacket(
         uint32_t event_index, uint16_t packet_id) const;

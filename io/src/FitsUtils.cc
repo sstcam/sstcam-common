@@ -11,7 +11,7 @@ std::string ErrorMessage(int status) {
     static char error[100];
     fits_get_errstatus(status, error);
     std::ostringstream ss;
-    ss << "(FITSIO: " << error << ")";
+    ss << " (FITSIO: " << error << ")";
     return ss.str();
 }
 

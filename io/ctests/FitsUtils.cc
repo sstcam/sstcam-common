@@ -14,10 +14,10 @@ namespace fitsutils {
 TEST_CASE("FitsUtils") {
 
     SUBCASE("ErrorMessage") {
-        CHECK(ErrorMessage(0) == "(FITSIO: OK - no error)");
-        CHECK(ErrorMessage(1) == "(FITSIO: non-CFITSIO program error)");
-        CHECK(ErrorMessage(2) == "(FITSIO: unknown error status)");
-        CHECK(ErrorMessage(104) == "(FITSIO: could not open the named file)");
+        CHECK(ErrorMessage(0) == " (FITSIO: OK - no error)");
+        CHECK(ErrorMessage(1) == " (FITSIO: non-CFITSIO program error)");
+        CHECK(ErrorMessage(2) == " (FITSIO: unknown error status)");
+        CHECK(ErrorMessage(104) == " (FITSIO: could not open the named file)");
     }
 
     // Check path exists

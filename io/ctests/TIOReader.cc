@@ -12,7 +12,7 @@ TEST_CASE("TIOReader") {
 //    // TODO: Add small test file for both R0, R1, full camera, and SM
     std::string path = "/Users/Jason/Downloads/tempdata/obs/Run12917_r0.tio";
     std::ifstream file (path);
-    CHECK(file.good());
+    REQUIRE(file.good());
     file.close();
 
     SUBCASE("TIOReader Constructor") {
@@ -20,6 +20,10 @@ TEST_CASE("TIOReader") {
         CHECK(reader.IsOpen());
         reader.Close();
         CHECK(!reader.IsOpen());
+    }
+
+    SUBCASE("TIOReader missing file") {
+        CHECK_THROWS(TIOReader("/not/a/file.fits"));
     }
 
     auto reader = TIOReader(path);

@@ -28,27 +28,27 @@ TIOReader::TIOReader(const std::string& path)
     // Open fits file
     int status = 0;
     if (fits_open_file(&fits_, path.c_str(), READONLY, &status)) {
-        std::cerr << "Cannot open " << path << " "
-                  << fitsutils::ErrorMessage(status) << std::endl;
-        Close();
-        return;
+        std::ostringstream ss;
+        ss << "Cannot open: " << path << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
     }
 
     // Get EventHeaderVersion
     std::string key = "EVENT_HEADER_VERSION";
     uint16_t version = fitsutils::GetHeaderKeyValue<int16_t, TINT>(fits_, key);
     if (version < 1) {
-        std::cerr << "Incompatible EVENT_HEADER_VERSION: " << version << std::endl;
         Close();
-        return;
+        std::ostringstream ss;
+        ss << "Incompatible EVENT_HEADER_VERSION: " << version;
+        throw std::runtime_error(ss.str());
     }
 
     // Move pointer to EVENTS HDU
     if (fits_movnam_hdu(fits_, BINARY_TBL, const_cast<char *>("EVENTS"), 0, &status)) {
-        std::cerr << "Cannot move to the HDU (EVENTS) "
-                  << fitsutils::ErrorMessage(status) << std::endl;
         Close();
-        return;
+        std::ostringstream ss;
+        ss << "Cannot move to the HDU: EVENTS " << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
     }
     fits_get_hdu_num(fits_, &event_hdu_num_);
 
@@ -59,19 +59,20 @@ TIOReader::TIOReader(const std::string& path)
     // Get Number of columns in EVENTS HDU
     long n_event_columns;
     if (fits_read_key_lng(fits_, "TFIELDS", &n_event_columns, comment, &status)) {
-        std::cerr << "Cannot read TFIELDS " << fitsutils::ErrorMessage(status) << std::endl;
         Close();
-        return;
+        std::ostringstream ss;
+        ss << "Cannot read TFIELDS " << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
     }
 
     // Find first packet column (and therefore calculate the number of headers)
     for (int64_t i = 0; i < n_event_columns && i < 256; ++i) {
         snprintf(tform, FLEN_KEYWORD, "TTYPE%" PRIi64, i + 1);
         if (fits_read_key_str(fits_, tform, value, comment, &status)) {
-            std::cerr << "Cannot read TTYPE" << i + 1 << " "
-                      << fitsutils::ErrorMessage(status);
             Close();
-            return;
+            std::ostringstream ss;
+            ss << "Cannot read TTYPE " << i + 1 << fitsutils::ErrorMessage(status);
+            throw std::runtime_error(ss.str());
         } else {
             // Found the first packet column
             if (strcmp(value, "EVENT_PACKET_0") == 0) {
@@ -94,9 +95,10 @@ TIOReader::TIOReader(const std::string& path)
     for (int i = n_event_headers_; i < n_event_columns; ++i) {
         snprintf(tform, FLEN_KEYWORD, "TFORM%d", i + 1);
         if (fits_read_key_str(fits_, tform, value, comment, &status)) {
-            std::cerr << "Cannot read TFORM" << i + 1 << " "
-                      << fitsutils::ErrorMessage(status) << std::endl;
-            return;
+            Close();
+            std::ostringstream ss;
+            ss << "Cannot read TFORM " << i + 1 << fitsutils::ErrorMessage(status);
+            throw std::runtime_error(ss.str());
         }
 
         uint16_t packet_size_i;
@@ -105,14 +107,17 @@ TIOReader::TIOReader(const std::string& path)
                 packet_size_ = packet_size_i;
             }
             else if (packet_size_i != packet_size_) {
-                std::cerr << "Expected value of TFORM" << i << " is "
-                          << packet_size_ << "B, but it is " << value << std::endl;
-                return;
+                Close();
+                std::ostringstream ss;
+                ss << "Expected value of TFORM " << i << " is "
+                << packet_size_ << " but it is " << value;
+                throw std::runtime_error(ss.str());
             }
         } else {
-            std::cerr << "Expected value of TFORM" << i << " is xxxB, but it is "
-                      << value << std::endl;
-            return;
+            Close();
+            std::ostringstream ss;
+            ss << "Expected value of TFORM " << i << " is xxxB, but it is " << value;
+            throw std::runtime_error(ss.str());
         }
     }
 
@@ -120,9 +125,10 @@ TIOReader::TIOReader(const std::string& path)
     status = 0;
     LONGLONG n_rows;
     if (fits_get_num_rowsll(fits_, &n_rows, &status)) {
-        std::cerr << "Cannot read the number of rows "
-                  << fitsutils::ErrorMessage(status) << std::endl;
-        return;
+        Close();
+        std::ostringstream ss;
+        ss << "Cannot read the number of rows " << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
     }
     n_events_ = static_cast<size_t>(n_rows);
 
@@ -164,8 +170,9 @@ void TIOReader::Close() {
 
     int status = 0;
     if (fits_close_file(fits_, &status)) {
-        std::cerr << "Cannot close the file "
-                  << fitsutils::ErrorMessage(status) << std::endl;
+        std::ostringstream ss;
+        ss << "Cannot close the file " << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
     } else {
         fits_ = nullptr;
     }
@@ -222,8 +229,9 @@ uint32_t TIOReader::GetEventID(uint32_t event_index) const {
     fits_read_col(fits_, TUINT, 1, event_index + 1, 1, 1, nullptr,
                   &event_id, nullptr, &status);
     if (status != 0) {
-        std::cerr << "Error reading Event ID from file" << std::endl;
-        return 0;
+        std::ostringstream ss;
+        ss << "Error reading Event ID from file " << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
     }
     return event_id;
 }
@@ -237,8 +245,9 @@ uint64_t TIOReader::GetEventTACK(uint32_t event_index) const {
     fits_read_col(fits_, TUINT, 3, event_index + 1, 1, 1, nullptr,
                   &tack32lsb, nullptr, &status);
     if (status != 0) {
-        std::cerr << "Error reading event TACK from file" << std::endl;
-        return 0;
+        std::ostringstream ss;
+        ss << "Error reading event TACK from file " << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
     }
     return (static_cast<uint64_t>(tack32msb) << 32u) | static_cast<uint64_t>(tack32lsb);
 }
@@ -250,9 +259,10 @@ uint16_t TIOReader::GetEventNPacketsFilled(uint32_t event_index) const{
     fits_read_col(fits_, TUSHORT, 4, event_index + 1, 1, 1, nullptr,
                   &n_filled, nullptr, &status);
     if (status != 0) {
-        std::cerr << "Error reading Event 'Number of Packets Filled' "
-                     "from file" << std::endl;
-        return 0;
+        std::ostringstream ss;
+        ss << "Error reading Event 'Number of Packets Filled' from file "
+            << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
     }
     return n_filled;
 }
@@ -264,8 +274,10 @@ int64_t TIOReader::GetEventCPUSecond(uint32_t event_index) const {
     fits_read_col(fits_, TLONGLONG, 5, event_index + 1, 1, 1, nullptr,
                   &cpu_s, nullptr, &status);
     if (status != 0) {
-        std::cerr << "Error reading event CPU timestamp (seconds) from file" << std::endl;
-        return 0;
+        std::ostringstream ss;
+        ss << "Error reading event CPU timestamp (seconds) from file "
+           << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
     }
     return cpu_s;
 }
@@ -277,26 +289,24 @@ int64_t TIOReader::GetEventCPUNanosecond(uint32_t event_index) const {
     fits_read_col(fits_, TLONGLONG, 6, event_index + 1, 1, 1, nullptr,
                   &cpu_ns, nullptr, &status);
     if (status != 0) {
-        std::cerr << "Error reading event CPU timestamp (nanosecond) from file" << std::endl;
-        return 0;
+        std::ostringstream ss;
+        ss << "Error reading event CPU timestamp (nanosecond) from file "
+           << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
     }
     return cpu_ns;
 }
 
-int TIOReader::MoveToEventHDU() const {
-    if (!IsOpen()) {
-        std::cerr << "File is not open" << std::endl;
-        return 1;
-    }
+void TIOReader::MoveToEventHDU() const {
+    if (!IsOpen()) throw std::runtime_error("File is not open");
 
     int status = 0;
     int hdutype = BINARY_TBL;
     if (fits_movabs_hdu(fits_, event_hdu_num_, &hdutype, &status)) {
-        std::cerr << "Cannot move to the event HDU "
-                  << fitsutils::ErrorMessage(status) << std::endl;
-        return 1;
+        std::ostringstream ss;
+        ss << "Cannot move to the event HDU " << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
     }
-    return 0;
 }
 
 std::shared_ptr<WaveformDataPacket> TIOReader::ReadPacket(
@@ -310,9 +320,11 @@ std::shared_ptr<WaveformDataPacket> TIOReader::ReadPacket(
     if (fits_read_col(fits_, TBYTE, packet_id + n_event_headers_ + 1,
                       event_index + 1, 1, packet->GetPacketSize(), nullptr,
                       packet->GetDataPacket(), &anynull, &status)) {
-        std::cerr << "Cannot read the " << packet_id << "th packet of "
-                  << "the " << event_index << "th event "
-                  << fitsutils::ErrorMessage(status);
+        std::ostringstream ss;
+        ss << "Cannot read the " << packet_id << "th packet of "
+           << "the " << event_index << "th event "
+           << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
     }
     return packet;
 }
