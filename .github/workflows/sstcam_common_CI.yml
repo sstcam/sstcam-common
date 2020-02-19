@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        repository: https://github.com/sstcam/sstcam-build
+        repository: sstcam/sstcam-build
         token: ${{ secrets.SSTCAM_PAT }}
     - name: Install dependencies
       run: |
