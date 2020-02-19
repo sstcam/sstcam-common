@@ -13,12 +13,12 @@ jobs:
         repository: https://github.com/sstcam/sstcam-build
         token: ${{ secrets.SSTCAM_PAT }}
     - name: Install dependencies
-        run: |
+      run: |
           sudo apt install python3 pip3
           pip install pyyaml numpy
           pip install .
     - name: setup build
-        run: |
+      run: |
           mkdir project
           cd project
           sc-build init
