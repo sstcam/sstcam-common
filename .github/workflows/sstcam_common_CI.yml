@@ -28,7 +28,6 @@ jobs:
           ./configure --prefix=/usr/local
           sudo make
           sudo make install
-          sudo apt install libcfitsio
     - name: setup build
       run: |
           mkdir project
