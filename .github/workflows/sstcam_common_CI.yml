@@ -20,6 +20,7 @@ jobs:
       run: |
           pip install pyyaml numpy
           pip install .
+          sudo apt install libcfitsio
     - name: setup build
       run: |
           mkdir project
