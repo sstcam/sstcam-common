@@ -8,9 +8,9 @@ namespace constants {
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(sstcam_constants, m) {
-
-}
+//PYBIND11_MODULE(sstcam_constants, m) {
+//
+//}
 
 }  // namespace constants
 }  // namespace sstcam
