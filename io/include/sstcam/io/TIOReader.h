@@ -17,7 +17,6 @@ using WaveformDataPacket = sstcam::descriptions::WaveformDataPacket;
 using Waveform = sstcam::descriptions::Waveform;
 using WaveformEventR0 = sstcam::descriptions::WaveformEventR0;
 using WaveformEventR1 = sstcam::descriptions::WaveformEventR1;
-using time_point = std::chrono::time_point<std::chrono::system_clock>;
 
 
 class TIOReader {
