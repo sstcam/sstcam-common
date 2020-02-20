@@ -1,27 +1,9 @@
 cmake_minimum_required(VERSION 3.11...3.16)
 
-project(sstcam_calibration VERSION 1.0 LANGUAGES CXX)
+project(sstcam_calibration VERSION ${SSTCAM_COMMON_VERSION} LANGUAGES CXX)
 set(LIBTARGET ${PROJECT_NAME}_c)
 set(PYTARGET ${PROJECT_NAME})
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-# Save executables to bin directory
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
-# Dependencies
-# find_package(pybind11 REQUIRED)
-find_package(Doxygen)
-
-# if(Doxygen_FOUND)
-#     add_subdirectory(docs)
-# else()
-#     message(STATUS "Doxygen not found, not building docs")
-# endif()
-
-include(CTest)
 
 # src
 set(HEADER_LIST include/sstcam/calibration/Calibrator.h)
@@ -39,6 +21,7 @@ source_group(TREE "${PROJECT_SOURCE_DIR}/include" PREFIX "Header Files" FILES ${
 # python_module
 set(PYTHON_SRC pybind/module.cc)
 python_module(${PYTARGET} ${LIBTARGET} calibration "${PYTHON_SRC}")
+target_include_directories(${PYTARGET} PRIVATE ${SSTCAM_COMMON_VERSION_INCLUDE})
 
 # ctests
 add_library(test_main_calibration OBJECT ctests/test_main.cc)
