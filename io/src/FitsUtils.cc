@@ -2,6 +2,7 @@
 // This software is distributed under the terms of the BSD-3-Clause license.
 
 #include "sstcam/io/FitsUtils.h"
+#include "glog/logging.h"
 
 namespace sstcam {
 namespace io {
@@ -17,7 +18,7 @@ std::string ErrorMessage(int status) {
 
 bool HasHeaderKey(fitsfile* fits_, const std::string& key) {
     if (fits_ == nullptr) {
-        std::cerr << "File is not open" << std::endl;
+        LOG(ERROR) << "FITS File is not open";
         return false;
     }
 
