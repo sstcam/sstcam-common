@@ -1,0 +1,13 @@
+#ifndef SSTCAM_COMMON_VERSION_CONFIG_H
+#define SSTCAM_COMMON_VERSION_CONFIG_H
+
+// define your version_libinterface
+#define SSTCAM_COMMON_VERSION @SSTCAM_COMMON_VERSION_LONG@
+
+// alternatively you could add your global method getLibInterfaceVersion here
+const char* getSSTCamCommonGitVersion()
+{
+    return "@SSTCAM_COMMON_VERSION_LONG@";
+}
+
+#endif // SSTCAM_COMMON_VERSION_CONFIG_H
