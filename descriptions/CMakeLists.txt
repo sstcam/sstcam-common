@@ -1,26 +1,9 @@
 cmake_minimum_required(VERSION 3.11...3.16)
 
-project(sstcam_descriptions VERSION 1.0 LANGUAGES CXX)
+project(sstcam_descriptions VERSION ${SSTCAM_COMMON_VERSION} LANGUAGES CXX)
 set(LIBTARGET ${PROJECT_NAME}_c)
 set(PYTARGET ${PROJECT_NAME})
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-# Save executables to bin directory
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
-# Dependencies
-find_package(Doxygen)
-
-# if(Doxygen_FOUND)
-#     add_subdirectory(docs)
-# else()
-#     message(STATUS "Doxygen not found, not building docs")
-# endif()
-
-include(CTest)
 
 # src
 set(HEADER_LIST include/sstcam/descriptions/WaveformDataPacket.h include/sstcam/descriptions/Waveform.h include/sstcam/descriptions/WaveformEvent.h)

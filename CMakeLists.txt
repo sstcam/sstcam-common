@@ -1,5 +1,17 @@
 cmake_minimum_required(VERSION 3.11...3.16)
 
+
+#Get git version number
+execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=7
+                WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+                OUTPUT_VARIABLE SSTCAM_COMMON_VERSION
+                ERROR_QUIET
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+configure_file(sstcam_common_version.h.in ${CMAKE_BINARY_DIR}/generated/sstcam_common_version.h )
+include_directories("${CMAKE_BINARY_DIR}/generated/")
+
+message(STATUS "SSTCam-common version: ${SSTCAM_COMMON_VERSION}")
+
 project(sstcam-common)
 message(STATUS "Configuring sstcam-constants")
 add_subdirectory(constants)
@@ -14,7 +26,6 @@ add_subdirectory(calibration)
 # Export targets for use in downstream CMake projects
 # -----------------------------------------------------------------------------
 include ( CMakePackageConfigHelpers )
-
 
 ## Make importable from build directory
 #write_basic_package_version_file(
