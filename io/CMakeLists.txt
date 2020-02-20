@@ -4,7 +4,7 @@ project(sstcam_io VERSION ${SSTCAM_COMMON_VERSION} LANGUAGES CXX)
 set(LIBTARGET ${PROJECT_NAME}_c)
 set(PYTARGET ${PROJECT_NAME})
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-include_directories("${CMAKE_BINARY_DIR}/generated/")
+#include_directories("${CMAKE_BINARY_DIR}/generated/")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(CFITSIO REQUIRED)
@@ -26,7 +26,7 @@ source_group(TREE "${PROJECT_SOURCE_DIR}/include" PREFIX "Header Files" FILES ${
 # python module
 set(PYTHON_SRC pybind/module.cc pybind/TIOReader.cc)
 python_module(${PYTARGET} ${LIBTARGET} io "${PYTHON_SRC}")
-
+target_include_directories(${PYTARGET} PRIVATE ${SSTCAM_COMMON_VERSION_INCLUDE})
 # ctests
 add_library(test_main_io OBJECT ctests/test_main.cc)
 target_include_directories(test_main_io PUBLIC ctests ${DOCTEST_INCLUDE_DIR})

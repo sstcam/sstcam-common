@@ -21,6 +21,7 @@ source_group(TREE "${PROJECT_SOURCE_DIR}/include" PREFIX "Header Files" FILES ${
 # python_module
 set(PYTHON_SRC pybind/module.cc)
 python_module(${PYTARGET} ${LIBTARGET} calibration "${PYTHON_SRC}")
+target_include_directories(${PYTARGET} PRIVATE ${SSTCAM_COMMON_VERSION_INCLUDE})
 
 # ctests
 add_library(test_main_calibration OBJECT ctests/test_main.cc)

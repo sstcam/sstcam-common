@@ -1,8 +1,9 @@
 // Copyright 2020 Cherenkov Telescope Array Observatory
 // This software is distributed under the terms of the BSD-3-Clause license.
 
-#include <pybind11/pybind11.h>
 #include "sstcam_common_version.h"
+#include <pybind11/pybind11.h>
+
 namespace sstcam {
 namespace io {
 

@@ -16,7 +16,7 @@ string(REGEX REPLACE "^v[0-9]+\\.[0-9]+\\.[0-9]+(.*)" "\\1" VERSION_SHA1 "${VERS
 set(SSTCAM_COMMON_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
 configure_file(sstcam_common_version.h.in ${CMAKE_BINARY_DIR}/generated/sstcam_common_version.h )
-include_directories("${CMAKE_BINARY_DIR}/generated/")
+set(SSTCAM_COMMON_VERSION_INCLUDE "${CMAKE_BINARY_DIR}/generated/")
 
 message(STATUS "SSTCam-common version: ${SSTCAM_COMMON_VERSION}")
 
