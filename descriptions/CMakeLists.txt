@@ -38,4 +38,3 @@ install(DIRECTORY "${CMAKE_BINARY_DIR}/share" DESTINATION .)
 
 # Compilation options
 target_compile_options(${LIBTARGET} PUBLIC -O2 -Wall -pedantic -Werror -Wextra)
-
