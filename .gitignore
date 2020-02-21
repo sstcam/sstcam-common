@@ -44,3 +44,6 @@ __pycache__
 
 # OSX
 *.DS_Store
+/.cproject
+/.project
+/.pydevproject
