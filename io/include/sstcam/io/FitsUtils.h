@@ -20,16 +20,18 @@ namespace fitsutils {
 
 std::string ErrorMessage(int status);
 
-bool HasHeaderKey(fitsfile* fits_, const std::string& key);
+long long int GetNRows(fitsfile* fits, int hdu_num);
 
-template <typename T, int FITS_DATATYPE>
-T GetHeaderKeyValue(fitsfile* fits_, const std::string& key) {
-    if (fits_ == nullptr) throw std::runtime_error("FITS file is not open");
+bool HasHeaderKey(fitsfile* fits, const std::string& key);
+
+template <typename T, int TFITS>
+T GetHeaderKeyValue(fitsfile* fits, const std::string& key) {
+    if (fits == nullptr) throw std::runtime_error("FITS file is not open");
 
     int status = 0;
     int hdutype = IMAGE_HDU;
     // Move to primary HDU header
-    if (fits_movabs_hdu(fits_, 1, &hdutype, &status)) {
+    if (fits_movabs_hdu(fits, 1, &hdutype, &status)) {
         std::ostringstream ss;
         ss << "Cannot move to the primary HDU" << ErrorMessage(status);
         throw std::runtime_error(ss.str());
@@ -37,7 +39,7 @@ T GetHeaderKeyValue(fitsfile* fits_, const std::string& key) {
 
     char keyvalue[FLEN_VALUE], comment[FLEN_COMMENT];
     status = 0;
-    if (fits_read_keyword(fits_, key.c_str(), keyvalue, comment, &status)) {
+    if (fits_read_keyword(fits, key.c_str(), keyvalue, comment, &status)) {
         std::ostringstream ss;
         ss << "Cannot find the header keyword:" << key << " " << ErrorMessage(status);
         throw std::runtime_error(ss.str());
@@ -53,7 +55,7 @@ T GetHeaderKeyValue(fitsfile* fits_, const std::string& key) {
 
     if constexpr(std::is_same<T, std::string>::value) {
         char value[81];
-        if (fits_read_key(fits_, TSTRING, key.c_str(), value, comment, &status)) {
+        if (fits_read_key(fits, TSTRING, key.c_str(), value, comment, &status)) {
             std::ostringstream ss;
             ss << "Cannot read the header keyword:" << key << " " << ErrorMessage(status);
             throw std::runtime_error(ss.str());
@@ -61,12 +63,52 @@ T GetHeaderKeyValue(fitsfile* fits_, const std::string& key) {
         return std::string(value);
     } else {
         T value;
-        if (fits_read_key(fits_, FITS_DATATYPE, key.c_str(), &value, comment, &status)) {
+        if (fits_read_key(fits, TFITS, key.c_str(), &value, comment, &status)) {
             std::ostringstream ss;
             ss << "Cannot read the header keyword:" << key << " " << ErrorMessage(status);
             throw std::runtime_error(ss.str());
         }
         return value;
+    }
+}
+
+template<typename T, int TFITS>
+void AddHeaderKeyValue(fitsfile* fits, const std::string& key, T value, const std::string& comment) {
+    if (fits == nullptr) throw std::runtime_error("FITS file is not open");
+
+    int status = 0;
+    int hdutype;
+    // Always write in the header of the primary HDU
+    if (fits_movabs_hdu(fits, 1, &hdutype, &status)) {
+        std::ostringstream ss;
+        ss << "Cannot move to the primary HDU" << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
+    }
+
+    if (fits_write_key(fits, TFITS, key.c_str(), &value, comment.c_str(), &status)) {
+        std::ostringstream ss;
+        ss << "Cannot write the keyword: " << key << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
+    }
+}
+
+template<typename T, int TFITS>
+void UpdateHeaderKeyValue(fitsfile* fits, const std::string& key, T value, const std::string& comment) {
+    if (fits == nullptr) throw std::runtime_error("FITS file is not open");
+
+    int status = 0;
+    int hdutype;
+    // Always write in the header of the primary HDU
+    if (fits_movabs_hdu(fits, 1, &hdutype, &status)) {
+        std::ostringstream ss;
+        ss << "Cannot move to the primary HDU" << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
+    }
+
+    if (fits_update_key(fits, TFITS, key.c_str(), &value, comment.c_str(), &status)) {
+        std::ostringstream ss;
+        ss << "Cannot update the keyword: " << key << fitsutils::ErrorMessage(status);
+        throw std::runtime_error(ss.str());
     }
 }
 
