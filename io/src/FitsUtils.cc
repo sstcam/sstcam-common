@@ -2,6 +2,7 @@
 // This software is distributed under the terms of the BSD-3-Clause license.
 
 #include "sstcam/io/FitsUtils.h"
+#include "glog/logging.h"
 
 namespace sstcam {
 namespace io {
@@ -39,7 +40,7 @@ long long int GetNRows(fitsfile* fits, int hdu_num) {
 
 bool HasHeaderKey(fitsfile* fits, const std::string& key) {
     if (fits == nullptr) {
-        std::cerr << "File is not open" << std::endl;
+        LOG(ERROR) << "FITS File is not open";
         return false;
     }
 

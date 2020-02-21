@@ -1,7 +1,7 @@
 import struct
 
 # from ssdaq import sslogger
-from bitarray import bitarray
+# from bitarray import bitarray
 import numpy as np
 
 # from ssdaq.core.utils import get_attritbues
@@ -150,7 +150,7 @@ class NominalTriggerPacketV1(TriggerPacket):
         TACK: int = 0,
         trigg_phase: int = 1,
         trigg_phases: np.ndarray = np.zeros((16, 512), dtype=np.uint8),
-        trigg_union: bitarray = np.zeros(512, dtype=np.uint8),
+        trigg_union: np.ndarray = np.zeros(512, dtype=np.uint8),
         uc_ev: int = 1,
         uc_pps: int = 1,
         uc_clock: int = 1,
@@ -162,7 +162,7 @@ class NominalTriggerPacketV1(TriggerPacket):
             TACK (int, optional): TACK time stamp
             trigg_phase (int, optional): The trigger phase i (i=[0,7]) in the form 2^i
             trigg_phases (np.ndarray, optional): Triggered phases for the first two trigger blocks (up to 16 phases)
-            trigg_union (bitarray, optional): The union of all triggers during readout
+            trigg_union (np.ndarray, optional): The union of all triggers during readout
             uc_ev (int, optional): UC event counter
             uc_pps (int, optional): UC pps (pulse per second) counter
             uc_clock (int, optional): UC clock counter
@@ -313,7 +313,7 @@ class BusyTriggerPacketV1(NominalTriggerPacketV1):
         TACK: int = 0,
         trigg_phase: int = 0,
         trigg_phases: np.ndarray = np.zeros((16, 512), dtype=np.uint16),
-        trigg_union: bitarray = np.zeros(512, dtype=np.uint16),
+        trigg_union: np.ndarray = np.zeros(512, dtype=np.uint16),
         uc_ev: int = 1,
         uc_pps: int = 1,
         uc_clock: int = 1,
@@ -325,7 +325,7 @@ class BusyTriggerPacketV1(NominalTriggerPacketV1):
             TACK (int, optional): TACK time stamp
             trigg_phase (int, optional): The trigger phase i (i=[0,7]) in the form 2^i
             trigg_phases (np.ndarray, optional): Triggered phases for the first two trigger blocks (up to 16 phases)
-            trigg_union (bitarray, optional): The union of all triggers during readout
+            trigg_union (np.ndarray, optional): The union of all triggers during readout
             uc_ev (int, optional): UC event counter
             uc_pps (int, optional): UC pps (pulse per second) counter
             uc_clock (int, optional): UC clock counter

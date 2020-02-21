@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package sstcam;
+
+// ****** Logging Data Definition, valid for all subsystems
+message LogData 
+{
+	int32 severity = 1;
+	string	sender	= 2;	
+	string message = 3;
+	int64 time = 4;
+	int32 pid = 5;
+	string sourcePath = 6;
+	string sourceFile = 7;
+	int32 line = 8;
+
+}

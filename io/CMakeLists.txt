@@ -12,7 +12,7 @@ find_package(CFITSIO REQUIRED)
 # src
 set(HEADER_LIST include/sstcam/io/TIOReader.h include/sstcam/io/FitsUtils.h)
 add_library(${LIBTARGET} SHARED src/TIOReader.cc src/FitsUtils.cc ${HEADER_LIST})
-target_link_libraries(${LIBTARGET} sstcam_descriptions_c ${CFITSIO_LIBRARIES})
+target_link_libraries(${LIBTARGET} sstcam_descriptions_c ${CFITSIO_LIBRARIES} glog)
 target_include_directories(${LIBTARGET} PUBLIC ${CFITSIO_INCLUDE_DIRS}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
         $<INSTALL_INTERFACE:include/>

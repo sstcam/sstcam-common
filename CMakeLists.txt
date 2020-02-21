@@ -35,6 +35,10 @@ add_subdirectory(calibration)
 # -----------------------------------------------------------------------------
 include ( CMakePackageConfigHelpers )
 
+
+# set protobuf include library
+set(Protobuf_IMPORT_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/descriptions/protobuf/ PARENT_SCOPE)
+
 ## Make importable from build directory
 #write_basic_package_version_file(
 #  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
