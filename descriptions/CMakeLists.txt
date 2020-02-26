@@ -13,7 +13,9 @@ target_include_directories(${LIBTARGET} PUBLIC
     $<INSTALL_INTERFACE:include/>
     )
 target_compile_features(${LIBTARGET} PUBLIC cxx_std_11)
-install (TARGETS ${LIBTARGET} EXPORT sstcam-base-targets LIBRARY DESTINATION lib)
+install (TARGETS ${LIBTARGET} EXPORT ${PROJECT_TARGETS} LIBRARY DESTINATION lib)
+# Compilation options
+target_compile_options(${LIBTARGET} PUBLIC -O2 -Wall -pedantic -Werror -Wextra)
 
 # Makes it easier for IDEs to find all headers
 source_group(TREE "${PROJECT_SOURCE_DIR}/include" PREFIX "Header Files" FILES ${HEADER_LIST})
@@ -36,5 +38,4 @@ file(GLOB DATA_FILES "${CMAKE_CURRENT_SOURCE_DIR}/share/sstcam/descriptions/*")
 file(COPY ${DATA_FILES} DESTINATION ${CMAKE_BINARY_DIR}/share/sstcam/descriptions/)
 install(DIRECTORY "${CMAKE_BINARY_DIR}/share" DESTINATION .)
 
-# Compilation options
-target_compile_options(${LIBTARGET} PUBLIC -O2 -Wall -pedantic -Werror -Wextra)
+
