@@ -1,4 +1,5 @@
-[![Actions Status](https://github.com/sstcam/sstcam-common/workflows/sstcam-common%20CI/badge.svg)](https://github.com/sstcam/sstcam-common/actions)
+![build](https://github.com/sstcam/sstcam-common/workflows/build/badge.svg)
+![tests](https://github.com/sstcam/sstcam-common/workflows/tests/badge.svg)
 # sstcam-comon
 
 Common libraries for the SST camera
