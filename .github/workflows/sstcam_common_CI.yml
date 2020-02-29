@@ -1,4 +1,4 @@
-name: sstcam-common CI
+name: build
 
 on: [push]
 
@@ -43,7 +43,7 @@ jobs:
       run:  |
         cd project/build
         make
-    - name: test
-      run:   |
-        cd project/build
-        ctest
+    #- name: test
+    #  run:   |
+    #    cd project/build
+    #    ctest
