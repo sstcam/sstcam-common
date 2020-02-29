@@ -23,6 +23,7 @@ message(STATUS "SSTCam-common version: ${SSTCAM_COMMON_VERSION}")
 set(PROJECT_TARGETS sstcam-common-targets)
 
 project(sstcam-common)
+
 message(STATUS "${Blue}Configuring sstcam-constants${ColourReset}")
 add_subdirectory(constants)
 message(STATUS "${Blue}Configuring sstcam-descriptions${ColourReset}")
