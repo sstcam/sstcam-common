@@ -11,7 +11,7 @@ set(HEADER_LIST include/sstcam/io/TIOReader.h include/sstcam/io/FitsUtils.h)
 sstcam_library(TARGET_SRCS src/TIOReader.cc src/FitsUtils.cc
                HEADER_LIST ${HEADER_LIST}
                ADD_INCLUDE_DIRS ${CFITSIO_INCLUDE_DIRS}
-               LINK_LIBRARIES sstcam_descriptions_c ${CFITSIO_LIBRARIES})
+               LINK_LIBRARIES sstcam_descriptions ${CFITSIO_LIBRARIES})
 # Compilation options
 target_compile_options(${LIBTARGET} PUBLIC -O2 -Wall -pedantic -Werror -Wextra)
 
