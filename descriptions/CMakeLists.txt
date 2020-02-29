@@ -19,12 +19,9 @@ sstcam_python_module(MODULE_NAME descriptions
                      INCLUDE_DIRS ${SSTCAM_COMMON_VERSION_INCLUDE})
 
 # ctests
-add_library(test_main_descriptions OBJECT ctests/test_main.cc)
-target_include_directories(test_main_descriptions PUBLIC ctests ${DOCTEST_INCLUDE_DIR})
+sstcam_tests(TESTS test_WaveformDataPacket test_Waveform test_WaveformEvent
+             LIBTARGETS ${LIBTARGET})
 
-sstcam_tests(test_WaveformDataPacket ctests/WaveformDataPacket.cc test_main_descriptions ${LIBTARGET})
-sstcam_tests(test_Waveform ctests/Waveform.cc test_main_descriptions ${LIBTARGET})
-sstcam_tests(test_WaveformEvent ctests/WaveformEvent.cc test_main_descriptions ${LIBTARGET})
 
 # data files
 file(GLOB DATA_FILES "${CMAKE_CURRENT_SOURCE_DIR}/share/sstcam/descriptions/*")

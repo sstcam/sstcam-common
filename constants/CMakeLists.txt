@@ -20,8 +20,11 @@ sstcam_python_module(MODULE_NAME constants
                      INCLUDE_DIRS ${SSTCAM_COMMON_VERSION_INCLUDE})
 
 # ctests
-add_library(test_main_constants OBJECT ctests/test_main.cc)
-target_include_directories(test_main_constants PUBLIC ctests ${DOCTEST_INCLUDE_DIR})
+sstcam_tests(TESTS
+             LIBTARGETS ${LIBTARGET})
+
+# add_library(test_main_constants OBJECT ctests/test_main.cc)
+# target_include_directories(test_main_constants PUBLIC ctests ${DOCTEST_INCLUDE_DIR})
 
 
 

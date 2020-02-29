@@ -26,9 +26,8 @@ sstcam_python_module(MODULE_NAME io
 
 
 # ctests
-add_library(test_main_io OBJECT ctests/test_main.cc)
-target_include_directories(test_main_io PUBLIC ctests ${DOCTEST_INCLUDE_DIR})
-sstcam_tests(test_FitsUtils ctests/FitsUtils.cc test_main_io ${LIBTARGET})
-sstcam_tests(test_TIOReader ctests/TIOReader.cc test_main_io ${LIBTARGET})
+sstcam_tests(TESTS test_FitsUtils test_TIOReader
+             LIBTARGETS ${LIBTARGET})
+
 
 
