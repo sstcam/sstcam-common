@@ -19,15 +19,17 @@ configure_file(sstcam_common_version.h.in ${CMAKE_BINARY_DIR}/generated/sstcam_c
 set(SSTCAM_COMMON_VERSION_INCLUDE "${CMAKE_BINARY_DIR}/generated/")
 
 message(STATUS "SSTCam-common version: ${SSTCAM_COMMON_VERSION}")
+# These are the targets to be exported for install by the subprojects
 set(PROJECT_TARGETS sstcam-common-targets)
+
 project(sstcam-common)
-message(STATUS "Configuring sstcam-constants")
+message(STATUS "${Blue}Configuring sstcam-constants${ColourReset}")
 add_subdirectory(constants)
-message(STATUS "Configuring sstcam-descriptions")
+message(STATUS "${Blue}Configuring sstcam-descriptions${ColourReset}")
 add_subdirectory(descriptions)
-message(STATUS "Configuring sstcam-io")
+message(STATUS "${Blue}Configuring sstcam-io${ColourReset}")
 add_subdirectory(io)
-message(STATUS "Configuring sstcam-calibration")
+message(STATUS "${Blue}Configuring sstcam-calibration${ColourReset}")
 add_subdirectory(calibration)
 
 # -----------------------------------------------------------------------------

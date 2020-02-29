@@ -1,19 +1,13 @@
 cmake_minimum_required(VERSION 3.11...3.16)
 
 project(sstcam_descriptions VERSION ${SSTCAM_COMMON_VERSION} LANGUAGES CXX)
-set(LIBTARGET ${PROJECT_NAME}_c)
-set(PYTARGET ${PROJECT_NAME})
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# src
+set(PYTARGET ${PROJECT_NAME})
+
+# setting up library
 set(HEADER_LIST include/sstcam/descriptions/WaveformDataPacket.h include/sstcam/descriptions/Waveform.h include/sstcam/descriptions/WaveformEvent.h)
-add_library(${LIBTARGET} SHARED src/WaveformDataPacket.cc src/Waveform.cc src/WaveformEvent.cc ${HEADER_LIST})
-target_include_directories(${LIBTARGET} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-    $<INSTALL_INTERFACE:include/>
-    )
-target_compile_features(${LIBTARGET} PUBLIC cxx_std_11)
-install (TARGETS ${LIBTARGET} EXPORT ${PROJECT_TARGETS} LIBRARY DESTINATION lib)
+sstcam_library(TARGET_SRCS src/WaveformDataPacket.cc src/Waveform.cc src/WaveformEvent.cc
+               HEADER_LIST ${HEADER_LIST})
 # Compilation options
 target_compile_options(${LIBTARGET} PUBLIC -O2 -Wall -pedantic -Werror -Wextra)
 
