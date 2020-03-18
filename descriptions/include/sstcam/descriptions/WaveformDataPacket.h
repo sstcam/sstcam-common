@@ -115,6 +115,10 @@ public:
 
     // Utility functions________________________________________________________
 
+    uint32_t GetEventID() const {
+        return static_cast<uint32_t>(GetTACK() / 100);
+    }
+
     uint16_t GetWaveformSamplesNBlocks() const { return (GetNBuffers() / 2); }
 
     // Size of entire waveform (samples only)
