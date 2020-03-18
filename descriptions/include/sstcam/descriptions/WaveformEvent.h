@@ -49,25 +49,18 @@ inline float GetSampleR1(Waveform& wf, uint16_t isam, float scale=1., float offs
 
 /*!
  * @class WaveformEvent
- * @brief Container for an event to be used for the building and reading of events.
+ * @brief Container to be used for the building and reading of events.
  * By default this class does not own nor manage the memory used for the data packets. Its
  * purpose is a wrapper class for a collection of data packets, to provide bookkeeping
  * and convenient waveform access.
  *
- * A template class is used here for the following reasons:
+ * Separate WaveformEventR0 and WaveformEventR1 classes are defined from this template.
+ * The difference between these classes is the GetSample method.
  *
- * - It is important to distinguish between R0 and R1 events, as the samples
- * are accessed differently from the packets
- *
- * - Code duplication is avoided as much as possible
- *
- * - It is appropriate and accurate to represent R0 waveforms as uint16 and R1
- * waveforms as float
- *
- * - A class inheritance structure, defining the GetSample method for R0 and R1
- * respectively, would result in many virtual table lookups in the GetWaveforms
- * method. This template structure avoids that by inlining the function into
- * the loop. (See http://groups.di.unipi.it/~nids/docs/templates_vs_inheritance.html)
+ * The GetSample method is passed as a template argument to avoid the virtual table
+ * lookup that would arise from in a subclass/virtual-method approach.
+ * With this approach the method is inlined during compilation.
+ * (See http://groups.di.unipi.it/~nids/docs/templates_vs_inheritance.html)
  */
 template<typename T, T TGetSample(Waveform&, uint16_t, float, float)>
 class WaveformEvent {
@@ -204,6 +197,8 @@ private:
     uint8_t first_active_module_slot_;
     float scale_;
     float offset_;
+
+    // TODO: Add event time and concept of timeout (for event building)
 
     // Get the first packet that is not empty
     WaveformDataPacket* GetFirstPacket() const {
