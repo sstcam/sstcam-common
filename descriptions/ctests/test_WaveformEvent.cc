@@ -155,49 +155,29 @@ TEST_CASE("WaveformEvent") {
         CHECK(packet_ptr.use_count() == 2);
     }
 
-    WaveformEventR0 event_r0(n_packets_per_event, n_pixels, first_active_module_slot);
+    WaveformEventR0 event_r0(n_packets_per_event, n_pixels,
+        first_active_module_slot, 20, 30);
     event_r0.AddPacket(packet.get());
-    WaveformEventR1 event_r1(n_packets_per_event, n_pixels, first_active_module_slot);
+    WaveformEventR1 event_r1(n_packets_per_event, n_pixels,
+        first_active_module_slot, 20, 30);
     event_r1.AddPacket(packet.get());
 
     SUBCASE("WaveformEventR0 Metadata") {
         CHECK(event_r0.GetNPixels() == n_pixels);
         CHECK(event_r0.GetNSamples() == n_samples);
+        CHECK(event_r0.GetFirstActiveModuleSlot() == first_active_module_slot);
+        CHECK(event_r0.GetCPUTimeSecond() == 20);
+        CHECK(event_r0.GetCPUTimeNanosecond() == 30);
+        CHECK(event_r0.GetScale() == 1.);
+        CHECK(event_r0.GetOffset() == 0.);
         CHECK(event_r0.GetFirstCellID() == 1448);
         CHECK(event_r0.GetTACK() == 2165717354592);
         CHECK(!event_r0.IsStale());
         CHECK(!event_r0.IsMissingPackets());
     }
 
-    SUBCASE("GetSampleR0 Sample") {
-        Waveform waveform;
-        WaveformDataPacket* packet_ = event_r0.GetPackets()[0];
-        waveform.Associate(packet_, packet_->GetWaveformStart(0));
-        CHECK(GetSampleR0(waveform, 0) == 636);
-    }
-
-    SUBCASE("GetSampleR1 Sample") {
-        Waveform waveform;
-        WaveformDataPacket* packet_ = event_r1.GetPackets()[0];
-        waveform.Associate(packet_, packet_->GetWaveformStart(0));
-        CHECK(GetSampleR1(waveform, 0) == 636.0f);
-    }
-
-    SUBCASE("GetSampleR0 Sample Scale&Offset") {
-        Waveform waveform;
-        WaveformDataPacket* packet_ = event_r0.GetPackets()[0];
-        waveform.Associate(packet_, packet_->GetWaveformStart(0));
-        CHECK(GetSampleR0(waveform, 0, 10, 3) == 636);
-    }
-
-    SUBCASE("GetSampleR1 Sample Scale&Offset") {
-        Waveform waveform;
-        WaveformDataPacket* packet_ = event_r1.GetPackets()[0];
-        waveform.Associate(packet_, packet_->GetWaveformStart(0));
-        CHECK(GetSampleR1(waveform, 0, 10, 3) == 60.60f);
-    }
-
-    WaveformEventR1 event_r1_so(n_packets_per_event, n_pixels, first_active_module_slot, 10, 3);
+    WaveformEventR1 event_r1_so(n_packets_per_event, n_pixels,
+        first_active_module_slot, 20, 30, 10, 3);
     event_r1_so.AddPacket(packet.get());
 
     SUBCASE("WaveformEventR1 Scale&Offset") {

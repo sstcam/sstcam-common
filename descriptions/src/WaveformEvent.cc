@@ -28,4 +28,59 @@ void GetHardcodedModuleSituation(std::set<uint8_t>& active_modules,
     n_pixels = n_modules * N_PIXELS_PER_MODULE;
 }
 
+WaveformEvent::WaveformEvent(size_t n_packets_per_event, size_t n_pixels,
+    uint8_t first_active_module_slot,
+    int64_t cpu_time_second, int64_t cpu_time_nanosecond,
+    float scale, float offset)
+    : n_packets_per_event_(n_packets_per_event),
+      packets_(n_packets_per_event),
+      packets_owned_(n_packets_per_event),
+      packet_index_(0),
+      n_pixels_(n_pixels),
+      first_active_module_slot_(first_active_module_slot),
+      cpu_time_second_(cpu_time_second),
+      cpu_time_nanosecond_(cpu_time_nanosecond),
+      scale_(scale),
+      offset_(offset)
+{ }
+
+void WaveformEvent::AddPacket(WaveformDataPacket* packet) {
+    if (IsFilled()) { // TODO: Remove this check for speed improvement?
+        std::cerr << "WaveformEvent is full" << std::endl;
+        return;
+    }
+    packets_[packet_index_++] = packet;
+}
+
+void WaveformEvent::AddPacketShared(const std::shared_ptr<WaveformDataPacket>& packet) {
+    if (IsFilled()) {
+        std::cerr << "WaveformEvent is full" << std::endl;
+        return;
+    }
+    packets_[packet_index_] = packet.get();
+    packets_owned_[packet_index_] = packet;
+    packet_index_++;
+}
+
+void WaveformEvent::Reset() {
+    std::fill(packets_.begin(), packets_.end(), nullptr);
+    packet_index_ = 0;
+}
+
+bool WaveformEvent::IsMissingPackets() const {
+    if (!IsFilled()) return true;
+    if (packets_.size() != n_packets_per_event_) return true;
+    for (WaveformDataPacket* packet : packets_) {
+        if (!packet || packet->IsEmpty()) return true;
+    }
+    return false;
+}
+
+WaveformDataPacket* WaveformEvent::GetFirstPacket() const {
+    for (WaveformDataPacket* packet : packets_) {
+        if (packet && !packet->IsEmpty()) return packet;
+    }
+    throw std::runtime_error("WaveformEvent is empty");
+}
+
 }}

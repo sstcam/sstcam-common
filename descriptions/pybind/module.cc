@@ -12,6 +12,8 @@ namespace py = pybind11;
 void waveform_data_packet(py::module &m);
 void waveform(py::module &m);
 void waveform_event(py::module &m);
+void waveform_event_r0(py::module &m);
+void waveform_event_r1(py::module &m);
 void get_hardcoded_module_situation(py::module &m);
 
 PYBIND11_MODULE(sstcam_descriptions, m) {
@@ -19,6 +21,8 @@ PYBIND11_MODULE(sstcam_descriptions, m) {
     waveform_data_packet(m);
     waveform(m);
     waveform_event(m);
+    waveform_event_r0(m);
+    waveform_event_r1(m);
     get_hardcoded_module_situation(m);
 }
 

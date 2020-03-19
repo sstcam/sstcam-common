@@ -31,25 +31,43 @@ py::array_t<T> GetWaveforms(const TEvent& waveform_event) {
     return py::array(shape, v->data(), capsule);
 }
 
-template<typename T, typename TEvent>
-void waveform_event_template(py::module &m, const std::string& name) {
-    py::class_<TEvent> waveform_event(m, name.c_str());
+void waveform_event(py::module &m) {
+    py::class_<WaveformEvent> waveform_event(m, "WaveformEvent");
+    waveform_event.def(py::init<size_t>());
     waveform_event.def(py::init<size_t, size_t, uint8_t>());
-    waveform_event.def(py::init<size_t, size_t, uint8_t, float, float>());
-    waveform_event.def("AddPacketShared", &TEvent::AddPacketShared);
-    waveform_event.def("GetWaveforms", GetWaveforms<T, TEvent>);
-    waveform_event.def("GetPackets", &TEvent::GetPackets);
-    waveform_event.def("GetNPixels", &TEvent::GetNPixels);
-    waveform_event.def("GetNSamples", &TEvent::GetNSamples);
-    waveform_event.def("IsMissingPackets", &TEvent::IsMissingPackets);
-    waveform_event.def("GetFirstCellID", &TEvent::GetFirstCellID);
-    waveform_event.def("GetTACK", &TEvent::GetTACK);
-    waveform_event.def("IsStale", &TEvent::IsStale);
+    waveform_event.def(py::init<size_t, size_t, uint8_t, int64_t, int64_t>());
+    waveform_event.def(py::init<size_t, size_t, uint8_t, int64_t, int64_t, float, float>());
+    waveform_event.def("AddPacketShared", &WaveformEvent::AddPacketShared);
+    waveform_event.def("GetPackets", &WaveformEvent::GetPackets);
+    waveform_event.def("GetNPixels", &WaveformEvent::GetNPixels);
+    waveform_event.def("GetNSamples", &WaveformEvent::GetNSamples);
+    waveform_event.def("GetNSamples", &WaveformEvent::GetNSamples);
+    waveform_event.def("GetCPUTimeSecond", &WaveformEvent::GetCPUTimeSecond);
+    waveform_event.def("GetCPUTimeNanosecond", &WaveformEvent::GetCPUTimeNanosecond);
+    waveform_event.def("GetScale", &WaveformEvent::GetScale);
+    waveform_event.def("GetOffset", &WaveformEvent::GetOffset);
+    waveform_event.def("IsMissingPackets", &WaveformEvent::IsMissingPackets);
+    waveform_event.def("GetFirstCellID", &WaveformEvent::GetFirstCellID);
+    waveform_event.def("GetTACK", &WaveformEvent::GetTACK);
+    waveform_event.def("IsStale", &WaveformEvent::IsStale);
 }
 
-void waveform_event(py::module &m) {
-    waveform_event_template<uint16_t, WaveformEventR0>(m, "WaveformEventR0");
-    waveform_event_template<float, WaveformEventR1>(m, "WaveformEventR1");
+void waveform_event_r0(py::module &m) {
+    py::class_<WaveformEventR0, WaveformEvent> waveform_event(m, "WaveformEventR0");
+    waveform_event.def(py::init<size_t>());
+    waveform_event.def(py::init<size_t, size_t, uint8_t>());
+    waveform_event.def(py::init<size_t, size_t, uint8_t, int64_t, int64_t>());
+    waveform_event.def(py::init<size_t, size_t, uint8_t, int64_t, int64_t, float, float>());
+    waveform_event.def("GetWaveforms", GetWaveforms<uint16_t, WaveformEventR0>);
+}
+
+void waveform_event_r1(py::module &m) {
+    py::class_<WaveformEventR1, WaveformEvent> waveform_event(m, "WaveformEventR1");
+    waveform_event.def(py::init<size_t>());
+    waveform_event.def(py::init<size_t, size_t, uint8_t>());
+    waveform_event.def(py::init<size_t, size_t, uint8_t, int64_t, int64_t>());
+    waveform_event.def(py::init<size_t, size_t, uint8_t, int64_t, int64_t, float, float>());
+    waveform_event.def("GetWaveforms", GetWaveforms<float, WaveformEventR1>);
 }
 
 }}

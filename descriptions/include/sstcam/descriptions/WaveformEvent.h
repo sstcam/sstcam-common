@@ -38,12 +38,35 @@ constexpr uint8_t DEFAULT_N_MODULES = 32;
 void GetHardcodedModuleSituation(std::set<uint8_t>& active_modules,
     size_t& n_pixels, uint8_t& first_active_module_slot);
 
-inline uint16_t GetSampleR0(Waveform& wf, uint16_t isam, float=1., float=0.) {
-    return wf.GetSample12bit(isam);
+/*!
+ * @brief Obtain an R0 sample from the waveform. The last two parameters do
+ * not have any effect, they only exist to ensure a common API for the GetSample methods.
+ * @param waveform
+ * The Waveform to extract the sample from
+ * @param isample
+ * The sample index in the waveform
+ */
+inline uint16_t GetSampleR0(Waveform& waveform, uint16_t isample,
+        float=1., float=0.) {
+    return waveform.GetSample12bit(isample);
 }
 
-inline float GetSampleR1(Waveform& wf, uint16_t isam, float scale=1., float offset=0.) {
-    auto sample = static_cast<float>(wf.GetSample16bit(isam));
+/*!
+ * @brief Obtain an R1 sample from the waveform.
+ * @param waveform
+ * The Waveform to extract the sample from
+ * @param isample
+ * The sample index in the waveform
+ * @param scale
+ * The scaling that was used to convert the original floating point R1 sample
+ * into uint16_t
+ * @param offset
+ * The offset that was used to convert the original floating point R1 sample
+ * into uint16_t
+ */
+inline float GetSampleR1(Waveform& waveform, uint16_t isample,
+        float scale=1., float offset=0.) {
+    auto sample = static_cast<float>(waveform.GetSample16bit(isample));
     return (sample / scale) - offset;
 }
 
@@ -54,15 +77,10 @@ inline float GetSampleR1(Waveform& wf, uint16_t isam, float scale=1., float offs
  * purpose is a wrapper class for a collection of data packets, to provide bookkeeping
  * and convenient waveform access.
  *
- * Separate WaveformEventR0 and WaveformEventR1 classes are defined from this template.
- * The difference between these classes is the GetSample method.
- *
- * The GetSample method is passed as a template argument to avoid the virtual table
- * lookup that would arise from in a subclass/virtual-method approach.
- * With this approach the method is inlined during compilation.
- * (See http://groups.di.unipi.it/~nids/docs/templates_vs_inheritance.html)
+ * Also used as the base class for the WaveformEventR0 and WaveformEventR1 classes,
+ * which each define the correct way to build a waveform vector from
+ * the samples contained in the WaveformDataPackets.
  */
-template<typename T, T TGetSample(Waveform&, uint16_t, float, float)>
 class WaveformEvent {
 public:
     /*!
@@ -70,25 +88,31 @@ public:
      * Number of packets contained in an event
      * @param n_pixels
      * Number of pixels. Used only for building the waveform vector returned
-     * in `GetWaveforms`. Should either be 1 or 32. Use the
-     * `GetHardcodedModuleSituation` method to obtain the correct value.
+     * in `GetWaveforms`. Should either be 64 (single module) or 2048
+     * (full camera). Use the `GetHardcodedModuleSituation` method to obtain
+     * the correct value.
      * @param first_active_module_slot
      * Module slot of the first active module. Used only for building the
-     * waveform vector returned in `GetWaveforms`. Should either be 1 or 32.
+     * waveform vector returned in `GetWaveforms`. If a single module is
+     * connected, should equal the slot index. Otherwise it should equal 0.
      * Use the `GetHardcodedModuleSituation` method to obtain the correct value.
+     * @param cpu_time_second
+     * The event creation time in number of seconds since epoch
+     * @param cpu_time_nanosecond
+     * The number of nanoseconds that elapsed since cpu_time_second at
+     * event creation time
+     * @param scale
+     * The amount of scaling applied to the samples to fit the floating point
+     * value into uint16_t. Only relevant for R1 events.
+     * @param offset
+     * The offset applied to ensure the sample is positive when converting the
+     * floating point value into uint16_t. Only relevant for R1 events.
      */
     explicit WaveformEvent(size_t n_packets_per_event,
         size_t n_pixels=DEFAULT_N_MODULES*N_PIXELS_PER_MODULE,
-        uint8_t first_active_module_slot=0, float scale=1., float offset=0.)
-        : n_packets_per_event_(n_packets_per_event),
-          packets_(n_packets_per_event),
-          packets_owned_(n_packets_per_event),
-          packet_index_(0),
-          n_pixels_(n_pixels),
-          first_active_module_slot_(first_active_module_slot),
-          scale_(scale),
-          offset_(offset)
-    { }
+        uint8_t first_active_module_slot=0,
+        int64_t cpu_time_second=0, int64_t cpu_time_nanosecond=0,
+        float scale=1., float offset=0.);
 
     virtual ~WaveformEvent() = default;
 
@@ -103,37 +127,66 @@ public:
 
     // Add a WaveformDataPacket raw pointer to the event. The event does not
     // have ownership of the memory in this packet
-    void AddPacket(WaveformDataPacket* packet) {
-        if (IsFilled()) { // TODO: Remove this check for speed improvement?
-            std::cerr << "WaveformEvent is full" << std::endl;
-            return;
-        }
-        packets_[packet_index_++] = packet;
-    }
+    void AddPacket(WaveformDataPacket* packet);
 
     // Add a WaveformDataPacket shared pointer to the event. The event shares
     // ownership of the memory in this packet. The packets pointed to by this
     // event are then guaranteed to remain alive during the event's lifetime.
     // This method is normally only called when reading packets from file
-    void AddPacketShared(const std::shared_ptr<WaveformDataPacket>& packet) {
-        if (IsFilled()) {
-            std::cerr << "WaveformEvent is full" << std::endl;
-            return;
-        }
-        packets_[packet_index_] = packet.get();
-        packets_owned_[packet_index_] = packet;
-        packet_index_++;
-    }
+    void AddPacketShared(const std::shared_ptr<WaveformDataPacket>& packet);
 
     // Declare the event empty and ready to be filled with new packets. Does
-    // not delete any packets.
-    void Reset() {
-        std::fill(packets_.begin(), packets_.end(), nullptr);
-        packet_index_ = 0;
-    }
+    // not delete the packets.
+    void Reset();
 
-    // Get the waveforms of the event as a contiguous 1D vector
-    std::vector<T> GetWaveforms() const {
+    // Obtain the vector containing the pointers to the packets
+    std::vector<WaveformDataPacket*> GetPackets() const { return packets_; }
+
+    size_t GetNPixels() const { return n_pixels_; }
+
+    size_t GetNSamples() const { return GetFirstPacket()->GetWaveformNSamples(); }
+
+    uint8_t GetFirstActiveModuleSlot() const { return first_active_module_slot_; }
+
+    int64_t GetCPUTimeSecond() const { return cpu_time_second_; }
+
+    int64_t GetCPUTimeNanosecond() const { return cpu_time_nanosecond_; }
+
+    float GetScale() const { return scale_; }
+
+    float GetOffset() const { return offset_; }
+
+    // Convenience methods for event information from packets___________________
+
+    // Check if the event is fully filled, and that all packets still exist
+    // and are not empty.
+    bool IsMissingPackets() const;
+
+    // Get the first_cell_id from the first filled packet
+    uint16_t GetFirstCellID() const { return GetFirstPacket()->GetFirstCellID(); }
+
+    // Get the TACK timestamp from the first filled packet
+    uint64_t GetTACK() const { return GetFirstPacket()->GetTACK(); }
+
+    // Check if the event is stale from the first filled packet
+    bool IsStale() const { return GetFirstPacket()->GetStaleBit() == 1; }
+
+protected:
+    size_t n_packets_per_event_;
+    std::vector<WaveformDataPacket*> packets_;
+    std::vector<std::shared_ptr<WaveformDataPacket>> packets_owned_;
+    uint16_t packet_index_;
+    size_t n_pixels_;
+    uint8_t first_active_module_slot_;
+    int64_t cpu_time_second_;
+    int64_t cpu_time_nanosecond_;
+    float scale_;
+    float offset_;
+
+    // Template to define how a waveform vector is built by an event.
+    // The template is specialized by the R0 and R1 subclasses.
+    template<typename T, T TGetSample(Waveform&, uint16_t, float, float)>
+    std::vector<T> GetWaveformsTemplate() const {
         size_t size = n_pixels_ * GetNSamples();
         std::vector<T> samples(size, 0);
         Waveform waveform;
@@ -155,71 +208,38 @@ public:
         return samples;
     }
 
-    // Obtain the vector containing the pointers to the packets
-    std::vector<WaveformDataPacket*> GetPackets() const { return packets_; }
-
-    size_t GetNPixels() const { return n_pixels_; }
-
-    size_t GetNSamples() const { return GetFirstPacket()->GetWaveformNSamples(); }
-
-    float GetScale() { return scale_; }
-
-    float GetOffset() { return offset_; }
-
-    // Convenience methods for event information from packets___________________
-
-    // Check if the event is fully filled, and that all packets still exist
-    // and are not empty.
-    bool IsMissingPackets() const {
-        if (!IsFilled()) return true;
-        if (packets_.size() != n_packets_per_event_) return true;
-        for (WaveformDataPacket* packet : packets_) {
-            if (!packet || packet->IsEmpty()) return true;
-        }
-        return false;
-    }
-
-    // Get the first_cell_id from the first filled packet
-    uint16_t GetFirstCellID() const { return GetFirstPacket()->GetFirstCellID(); }
-
-    // Get the TACK timestamp from the first filled packet
-    uint64_t GetTACK() const { return GetFirstPacket()->GetTACK(); }
-
-    // Check if the event is stale from the first filled packet
-    bool IsStale() const { return GetFirstPacket()->GetStaleBit() == 1; }
-
 private:
-    size_t n_packets_per_event_;
-    std::vector<WaveformDataPacket*> packets_;
-    std::vector<std::shared_ptr<WaveformDataPacket>> packets_owned_;
-    uint16_t packet_index_;
-    size_t n_pixels_;
-    uint8_t first_active_module_slot_;
-    float scale_;
-    float offset_;
-
-    // TODO: Add event time and concept of timeout (for event building)
-
     // Get the first packet that is not empty
-    WaveformDataPacket* GetFirstPacket() const {
-        for (WaveformDataPacket* packet : packets_) {
-            if (packet && !packet->IsEmpty()) return packet;
-        }
-        throw std::runtime_error("WaveformEvent is empty");
-    }
+    WaveformDataPacket* GetFirstPacket() const;
 };
 
 /*!
  * @class WaveformEventR0
  * @brief WaveformEvent class for R0 events (raw from the camera before calibration)
  */
-using WaveformEventR0 = WaveformEvent<uint16_t, GetSampleR0>;
+class WaveformEventR0 : public WaveformEvent{
+public:
+    using WaveformEvent::WaveformEvent;
+
+    // Get the waveforms of the event as a contiguous 1D vector
+    std::vector<uint16_t> GetWaveforms() const {
+        return GetWaveformsTemplate<uint16_t, GetSampleR0>();
+    }
+};
 
 /*!
  * @class WaveformEventR1
  * @brief WaveformEvent class for R1 events (post low-level calibration)
  */
-using WaveformEventR1 = WaveformEvent<float, GetSampleR1>;
+class WaveformEventR1 : public WaveformEvent {
+public:
+    using WaveformEvent::WaveformEvent;
+
+    // Get the waveforms of the event as a contiguous 1D vector
+    std::vector<float> GetWaveforms() const {
+        return GetWaveformsTemplate<float, GetSampleR1>();
+    }
+};
 
 }}
 

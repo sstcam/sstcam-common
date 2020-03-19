@@ -29,6 +29,7 @@ def test_waveform_event_r0(packet_array):
     waveforms = event.GetWaveforms()
     assert (waveforms[:32] > 0).all()
 
+
 def test_waveform_event_r1(packet_array):
     n_packets_per_event = 1
     packet_size = 8276
@@ -62,7 +63,7 @@ def test_scale_offset(packet_array):
     scale = 10
     offset = 5
     event = WaveformEventR1(n_packets_per_event, n_pixels,
-                            first_active_module_slot, scale, offset)
+                            first_active_module_slot, 20, 30, scale, offset)
     packet = WaveformDataPacket(packet_size)
     packet.GetDataPacket()[:] = packet_array
     event.AddPacketShared(packet)
@@ -78,7 +79,14 @@ def test_get_event_metadata(packet_array):
     n_pixels = 64
     first_active_module_slot = 22
 
-    event = WaveformEventR1(n_packets_per_event, n_pixels, first_active_module_slot)
+    event = WaveformEventR1(n_packets_per_event, n_pixels,
+                            first_active_module_slot, 20, 30, 40, 50)
+
+    assert event.GetCPUTimeSecond() == 20
+    assert event.GetCPUTimeNanosecond() == 30
+    assert event.GetScale() == 40
+    assert event.GetOffset() == 50
+
     packet = WaveformDataPacket(packet_size)
     packet.GetDataPacket()[:] = packet_array
     event.AddPacketShared(packet)
