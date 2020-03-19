@@ -32,7 +32,7 @@ TEST_CASE("FitsUtils") {
     REQUIRE(!fits_open_file(&fits_, path.c_str(), READONLY, &status));
 
     SUBCASE("HasHeaderKey") {
-        CHECK(!HasHeaderKey(nullptr, ""));
+        CHECK_THROWS_AS(HasHeaderKey(nullptr, ""), std::runtime_error);
         CHECK(!HasHeaderKey(fits_, ""));
         CHECK(HasHeaderKey(fits_, "EVENT_HEADER_VERSION"));
     }
