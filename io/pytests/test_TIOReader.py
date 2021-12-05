@@ -87,11 +87,31 @@ def test_str(single_tm_r1):
     assert len(str(single_tm_r1)) > 0
 
 
+def test_len(single_tm_r1):
+    assert len(single_tm_r1) == single_tm_r1.n_events
+
+
 def test_iter(single_tm_r1):
+    tack = []
     for iev, event in enumerate(single_tm_r1):
+        tack.append(event.tack)
         samples_from_getitem = single_tm_r1[iev].get_array()
         samples_from_iter = event.get_array()
         np.testing.assert_equal(samples_from_getitem, samples_from_iter)
+    assert len(tack) == len(set(tack))
+
+
+def test_getitem(single_tm_r1):
+    n_events = single_tm_r1.n_events
+    with pytest.raises(RuntimeError):
+        single_tm_r1[n_events]
+
+    event_0 = single_tm_r1[n_events-2]
+    event_1 = single_tm_r1[-2]
+    assert event_0.tack == event_1.tack
+    samples_0 = single_tm_r1[n_events-2].get_array()
+    samples_1 = single_tm_r1[-2].get_array()
+    np.testing.assert_equal(samples_0, samples_1)
 
 
 @pytest.fixture(params=["single_tm_r0", "single_tm_r1", "camera_r1"])

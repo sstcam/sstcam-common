@@ -131,6 +131,9 @@ private:
     // Template to define how events are read from the file.
     template<typename TWaveformEvent>
     [[nodiscard]] inline TWaveformEvent GetEvent(size_t event_index) const {
+        if (event_index >= GetNEvents())
+            throw std::runtime_error("Event index out of range");
+
         int64_t cpu_time_second = GetEventCPUSecond(event_index);
         int64_t cpu_time_nanosecond = GetEventCPUNanosecond(event_index);
         TWaveformEvent event(
@@ -141,7 +144,7 @@ private:
             event.AddPacketShared(ReadPacket(event_index, ipack));
         }
         return event;
-    } // TODO: test for memory-leak in python
+    }
 };
 
 }

@@ -155,7 +155,7 @@ uint32_t TIOReader::GetRunID() const {
     return fitsutils::GetHeaderKeyValue<int32_t, TINT>(fits_, "RUNNUMBER");
 }
 
-bool TIOReader::IsR1() const { // TODO: accessible after moving the event header to event ID?
+bool TIOReader::IsR1() const {
     if (fitsutils::HasHeaderKey(fits_, "R1")) {
         return fitsutils::GetHeaderKeyValue<bool, TLOGICAL>(fits_, "R1");
     } else {

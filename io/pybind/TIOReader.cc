@@ -16,15 +16,15 @@ using WaveformEventR1 = sstcam::descriptions::WaveformEventR1;
 
 // Obtain the correct WaveformEvent subclass based on the file type
 py::object GetEvent(const TIOReader& reader, uint32_t event_index) {
-    if (reader.IsR1()) return py::cast(reader.GetEventR1(event_index));
-    else return py::cast(reader.GetEventR0(event_index));
+    auto policy = py::return_value_policy::automatic;
+    if (reader.IsR1()) return py::cast(reader.GetEventR1(event_index), policy);
+    else return py::cast(reader.GetEventR0(event_index), policy);
 }
-// TODO: test type returned from r0 and r1 files
 
 class TIOIter {
 private:
     const TIOReader& reader;
-    size_t index; // TODO: size_t everywhere?
+    size_t index;
 public:
     TIOIter(const TIOReader& reader, size_t event_index )
         : reader(reader), index(event_index) {}
@@ -37,7 +37,6 @@ public:
         TIOIter clone(*this); ++index; return clone;
     }
 };
-// TODO: test iterator - check size of set of TACK
 
 std::string ReaderInfo(const TIOReader& reader) {
     std::stringstream ss;
@@ -73,8 +72,8 @@ void tio_reader(py::module &m) {
     tio_reader.def_property_readonly("is_r1", &TIOReader::IsR1);
     tio_reader.def_property_readonly("camera_version", &TIOReader::GetCameraVersion);
     tio_reader.def("__str__", ReaderInfo);
-    tio_reader.def("__getitem__", [](const TIOReader& reader, int32_t event_index) {
-        if (event_index < 0) event_index += reader.GetNEvents(); // TODO: test
+    tio_reader.def("__getitem__", [](const TIOReader& reader, int64_t event_index) {
+        if (event_index < 0) event_index += reader.GetNEvents();
         return GetEvent(reader, static_cast<uint32_t>(event_index));
     });
     tio_reader.def("__len__", [](const TIOReader& reader) {
@@ -86,7 +85,7 @@ void tio_reader(py::module &m) {
     }, py::keep_alive<0, 1>());
     tio_reader.def("__enter__", [&](TIOReader* reader) {
         return reader;
-    }, py::keep_alive<0, 1>());
+    });
     tio_reader.def("__exit__", [&](TIOReader* reader, py::object& exc_type, py::object& exc_val, py::object& exc_tb) {
         (void)exc_type;
         (void)exc_val;
@@ -94,7 +93,5 @@ void tio_reader(py::module &m) {
         reader->Close();
     });
 }
-
-// TODO: Test len and getitem and negative
 
 }
