@@ -42,7 +42,7 @@ std::string ReaderInfo(const TIOReader& reader) {
     ss << "path: " << reader.GetPath() << std::endl;
     ss << "run_id: " << reader.GetRunID() << std::endl;
     ss << "n_events: " << reader.GetNEvents() << std::endl;
-    ss << "n_pixles: " << reader.GetNPixels() << std::endl;
+    ss << "n_pixels: " << reader.GetNPixels() << std::endl;
     ss << "n_samples: " << reader.GetNSamples() << std::endl;
     ss << "is_r1: " << std::boolalpha << reader.IsR1() << std::endl;
     ss << "active_module_slots: ";
