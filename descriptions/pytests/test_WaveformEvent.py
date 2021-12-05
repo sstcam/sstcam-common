@@ -20,13 +20,13 @@ def test_waveform_event_r0(packet_array):
     first_active_module_slot = 22
     event = WaveformEventR0(n_packets_per_event, n_pixels, first_active_module_slot)
     with pytest.raises(RuntimeError):
-        event.GetWaveformSamplesArray()
+        event.get_array()
 
     packet = WaveformDataPacket(packet_size)
     packet.GetDataPacket()[:] = packet_array
-    event.AddPacketShared(packet)
-    assert event.GetPackets()[0] == packet
-    waveforms = event.GetWaveformSamplesArray()
+    event.add_packet_shared(packet)
+    assert event.packets[0] == packet
+    waveforms = event.get_array()
     assert (waveforms[:32] > 0).all()
     assert waveforms.dtype == np.uint16
 
@@ -38,13 +38,13 @@ def test_waveform_event_r1(packet_array):
     first_active_module_slot = 22
     event = WaveformEventR1(n_packets_per_event, n_pixels, first_active_module_slot)
     with pytest.raises(RuntimeError):
-        event.GetWaveformSamplesArray()
+        event.get_array()
 
     packet = WaveformDataPacket(packet_size)
     packet.GetDataPacket()[:] = packet_array
-    event.AddPacketShared(packet)
-    assert event.GetPackets()[0] == packet
-    waveforms = event.GetWaveformSamplesArray()
+    event.add_packet_shared(packet)
+    assert event.packets[0] == packet
+    waveforms = event.get_array()
     assert (waveforms[:32] > 0).all()
     assert waveforms.dtype == np.float32
 
@@ -58,8 +58,8 @@ def test_scale_offset(packet_array):
     event = WaveformEventR1(n_packets_per_event, n_pixels, first_active_module_slot)
     packet = WaveformDataPacket(packet_size)
     packet.GetDataPacket()[:] = packet_array
-    event.AddPacketShared(packet)
-    waveforms_1 = event.GetWaveformSamplesArray()
+    event.add_packet_shared(packet)
+    waveforms_1 = event.get_array()
     assert (waveforms_1[:32] > 0).all()
 
     scale = 10
@@ -68,8 +68,8 @@ def test_scale_offset(packet_array):
                             first_active_module_slot, 20, 30, scale, offset)
     packet = WaveformDataPacket(packet_size)
     packet.GetDataPacket()[:] = packet_array
-    event.AddPacketShared(packet)
-    waveforms_2 = event.GetWaveformSamplesArray()
+    event.add_packet_shared(packet)
+    waveforms_2 = event.get_array()
     assert (waveforms_2[:32] > 0).all()
 
     np.testing.assert_equal((waveforms_1[:32] / scale) - offset, waveforms_2[:32])
@@ -84,12 +84,12 @@ def test_get_event_metadata(packet_array):
     event = WaveformEventR1(n_packets_per_event, n_pixels,
                             first_active_module_slot, 20, 30, 40, 50)
 
-    assert event.GetCPUTimeSecond() == 20
-    assert event.GetCPUTimeNanosecond() == 30
-    assert event.GetScale() == 40
-    assert event.GetOffset() == 50
+    assert event.cpu_sec == 20
+    assert event.cpu_ns == 30
+    assert event.scale == 40
+    assert event.offset == 50
 
     packet = WaveformDataPacket(packet_size)
     packet.GetDataPacket()[:] = packet_array
-    event.AddPacketShared(packet)
-    assert event.GetFirstCellID() == 1448
+    event.add_packet_shared(packet)
+    assert event.first_cell_id == 1448

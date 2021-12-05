@@ -42,31 +42,31 @@ void waveform_event(py::module &m) {
         py::init<size_t, size_t, uint8_t, int64_t, int64_t>());
     waveform_event.def(
         py::init<size_t, size_t, uint8_t, int64_t, int64_t, float, float>());
-    waveform_event.def("AddPacketShared",
+    waveform_event.def("add_packet_shared",
         &WaveformEvent::AddPacketShared);
-    waveform_event.def("GetPackets",
+    waveform_event.def_property_readonly("packets",
         &WaveformEvent::GetPackets, py::return_value_policy::reference_internal);
-    waveform_event.def("GetNPixels",
+    waveform_event.def_property_readonly("n_pixels",
         &WaveformEvent::GetNPixels);
-    waveform_event.def("GetNSamples",
+    waveform_event.def_property_readonly("n_samples",
         &WaveformEvent::GetNSamples);
-    waveform_event.def("GetCPUTimeSecond",
+    waveform_event.def_property_readonly("cpu_sec",
         &WaveformEvent::GetCPUTimeSecond);
-    waveform_event.def("GetCPUTimeNanosecond",
+    waveform_event.def_property_readonly("cpu_ns",
         &WaveformEvent::GetCPUTimeNanosecond);
-    waveform_event.def("GetScale",
+    waveform_event.def_property_readonly("scale",
         &WaveformEvent::GetScale);
-    waveform_event.def("GetOffset",
+    waveform_event.def_property_readonly("offset",
         &WaveformEvent::GetOffset);
-    waveform_event.def("GetIndex",
+    waveform_event.def_property_readonly("index",
         &WaveformEvent::GetIndex);
-    waveform_event.def("IsMissingPackets",
+    waveform_event.def_property_readonly("missing_packets",
         &WaveformEvent::IsMissingPackets);
-    waveform_event.def("GetFirstCellID",
+    waveform_event.def_property_readonly("first_cell_id",
         &WaveformEvent::GetFirstCellID);
-    waveform_event.def("GetTACK",
+    waveform_event.def_property_readonly("tack",
         &WaveformEvent::GetTACK);
-    waveform_event.def("IsStale",
+    waveform_event.def_property_readonly("stale",
         &WaveformEvent::IsStale);
 }
 
@@ -80,7 +80,7 @@ void waveform_event_r0(py::module &m) {
         py::init<size_t, size_t, uint8_t, int64_t, int64_t>());
     waveform_event.def(
         py::init<size_t, size_t, uint8_t, int64_t, int64_t, float, float>());
-    waveform_event.def("GetWaveformSamplesArray",
+    waveform_event.def("get_array",
         &GetWaveformSamplesArray<uint16_t, WaveformEventR0>);
 }
 
@@ -94,7 +94,7 @@ void waveform_event_r1(py::module &m) {
         py::init<size_t, size_t, uint8_t, int64_t, int64_t>());
     waveform_event.def(
         py::init<size_t, size_t, uint8_t, int64_t, int64_t, float, float>());
-    waveform_event.def("GetWaveformSamplesArray",
+    waveform_event.def("get_array",
         &GetWaveformSamplesArray<float , WaveformEventR1>);
 }
 
