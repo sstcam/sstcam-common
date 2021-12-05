@@ -16,9 +16,8 @@ using WaveformEventR1 = sstcam::descriptions::WaveformEventR1;
 
 // Obtain the correct WaveformEvent subclass based on the file type
 py::object GetEvent(const TIOReader& reader, uint32_t event_index) {
-    auto policy = py::return_value_policy::automatic;
-    if (reader.IsR1()) return py::cast(reader.GetEventR1(event_index), policy);
-    else return py::cast(reader.GetEventR0(event_index), policy);
+    if (reader.IsR1()) return py::cast(reader.GetEventR1(event_index));
+    else return py::cast(reader.GetEventR0(event_index));
 }
 
 class TIOIter {
