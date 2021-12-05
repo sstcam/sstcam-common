@@ -5,11 +5,8 @@
 #include "doctest.h"
 #include <fstream>
 #include <iostream>
-//#include <sstcam/io/TIOReader.h>
 
-namespace sstcam {
-namespace io {
-namespace fitsutils {
+namespace sstcam::io::fitsutils {
 
 TEST_CASE("FitsUtils") {
 
@@ -21,7 +18,7 @@ TEST_CASE("FitsUtils") {
     }
 
     // Check path exists
-    std::string path = "/Users/Jason/Downloads/tempdata/obs/Run12917_r1.tio";
+    std::string path = "../../share/sstcam/io/chec_r1.tio";
     std::ifstream file(path);
     REQUIRE(file.good());
     file.close();
@@ -101,21 +98,21 @@ TEST_CASE("FitsUtils") {
     }
 
     SUBCASE("GetHeaderKeyValue float") {
-        std::string key = "SLOT-31-TPRI";
+        std::string key = "SCALE";
         auto value_int = GetHeaderKeyValue<int32_t, TINT>(fits_, key);
-        CHECK(value_int == 34);
+        CHECK(value_int == 23);
 
         auto value_float = GetHeaderKeyValue<float, TFLOAT>(fits_, key);
-        CHECK(value_float == 34.9375f);
+        CHECK(value_float == 23.4f);
 
         auto value_double = GetHeaderKeyValue<double, TDOUBLE>(fits_, key);
-        CHECK(value_double == 34.9375);
+        CHECK(value_double == 23.4);
 
         auto value_bool = GetHeaderKeyValue<bool, TLOGICAL>(fits_, key);
         CHECK(value_bool);
 
         auto value_string = GetHeaderKeyValue<std::string, TSTRING>(fits_, key);
-        CHECK(value_string == "34.9375");
+        CHECK(value_string == "23.4");
     }
 
     SUBCASE("GetHeaderKeyValue bool") {
@@ -158,23 +155,23 @@ TEST_CASE("FitsUtils") {
     SUBCASE("GetHeaderKeyValue number in string") {
         std::string key = "RUNNUMBER";
         auto value_int = GetHeaderKeyValue<int32_t, TINT>(fits_, key);
-        CHECK(value_int == 12917);
+        CHECK(value_int == 15639);
 
         auto value_float = GetHeaderKeyValue<float, TFLOAT>(fits_, key);
-        CHECK(value_float == 12917.0f);
+        CHECK(value_float == 15639.0f);
 
         auto value_double = GetHeaderKeyValue<double, TDOUBLE>(fits_, key);
-        CHECK(value_double == 12917.0);
+        CHECK(value_double == 15639.0);
 
         auto value_bool = GetHeaderKeyValue<bool, TLOGICAL>(fits_, key);
-        CHECK(!value_bool); // Why?
+        CHECK(!value_bool); // TODO: Why?
 
         auto value_string = GetHeaderKeyValue<std::string, TSTRING>(fits_, key);
-        CHECK(value_string == "12917");
+        CHECK(value_string == "15639");
     }
 
     status = 0;
     REQUIRE(!fits_close_file(fits_, &status));
 }
 
-}}}
+}

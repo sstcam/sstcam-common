@@ -6,11 +6,9 @@
 #include <iostream>
 #include <cinttypes>
 #include <memory>
-#include <set>
 #include <cstring>
 
-namespace sstcam {
-namespace io {
+namespace sstcam::io {
 
 TIOReader::TIOReader(const std::string& path)
     : fits_(nullptr),
@@ -122,23 +120,14 @@ TIOReader::TIOReader(const std::string& path)
     }
 
     // Get number of events in file
-    status = 0;
-    LONGLONG n_rows;
-    if (fits_get_num_rowsll(fits_, &n_rows, &status)) {
-        Close();
-        std::ostringstream ss;
-        ss << "Cannot read the number of rows " << fitsutils::ErrorMessage(status);
-        throw std::runtime_error(ss.str());
-    }
-    n_events_ = static_cast<size_t>(n_rows);
+    n_events_ = static_cast<size_t>(fitsutils::GetNRows(fits_, event_hdu_num_));
 
     // Obtain the modules that were active and obtain the hardcoded module situation
-    std::set<uint8_t> active_modules;
     for (uint32_t ipack=0; ipack < n_packets_per_event_; ipack++) {
-        active_modules.insert(ReadPacket(0, ipack)->GetSlotID());
+        active_modules_.insert(ReadPacket(0, ipack)->GetSlotID());
     }
     sstcam::descriptions::GetHardcodedModuleSituation(
-        active_modules, n_pixels_, first_active_module_slot_);
+        active_modules_, n_pixels_, first_active_module_slot_);
 
     // Get n_samples from first packet
     n_samples_ = ReadPacket(0, 0)->GetWaveformNSamples();
@@ -148,49 +137,25 @@ TIOReader::TIOReader(const std::string& path)
         scale_ = fitsutils::GetHeaderKeyValue<float, TFLOAT>(fits_, "SCALE");
         offset_ = fitsutils::GetHeaderKeyValue<float, TFLOAT>(fits_, "OFFSET");
     }
-
-    std::cout << "[TIOReader] Path: " << GetPath() << std::endl;
-    std::cout << "[TIOReader] RunID: " << GetRunID() << std::endl;
-    std::cout << "[TIOReader] CameraVersion: " << GetCameraVersion() << std::endl;
-    std::cout << "[TIOReader] IsR1: " << std::boolalpha << IsR1() << std::endl;
-    std::cout << "[TIOReader] ActiveModuleSlots: ";
-    for (uint8_t slot: active_modules) {
-        std::cout << (unsigned) slot << " ";
-    }
-    std::cout << std::endl;
-    std::cout << "[TIOReader] NEvents: " << n_events_ << std::endl;
-    std::cout << "[TIOReader] NPixels: " << n_pixels_ << std::endl;
-    std::cout << "[TIOReader] NSamples: " << n_samples_ << std::endl;
 }
 
 void TIOReader::Close() {
-    if (!IsOpen()) {
-        return;
-    }
+    if (!IsOpen()) return;
 
     int status = 0;
     if (fits_close_file(fits_, &status)) {
         std::ostringstream ss;
         ss << "Cannot close the file " << fitsutils::ErrorMessage(status);
         throw std::runtime_error(ss.str());
-    } else {
-        fits_ = nullptr;
     }
-}
-
-std::string TIOReader::GetPath() const {
-    if (!IsOpen()) {
-        return "";
-    }
-
-    return std::string(fits_->Fptr->filename);
+    fits_ = nullptr;
 }
 
 uint32_t TIOReader::GetRunID() const {
     return fitsutils::GetHeaderKeyValue<int32_t, TINT>(fits_, "RUNNUMBER");
 }
 
-bool TIOReader::IsR1() const {
+bool TIOReader::IsR1() const { // TODO: accessible after moving the event header to event ID?
     if (fitsutils::HasHeaderKey(fits_, "R1")) {
         return fitsutils::GetHeaderKeyValue<bool, TLOGICAL>(fits_, "R1");
     } else {
@@ -199,30 +164,16 @@ bool TIOReader::IsR1() const {
 }
 
 std::string TIOReader::GetCameraVersion() const {
-    auto camera_version = fitsutils::GetHeaderKeyValue<
-        std::string, TSTRING>(fits_, "CAMERAVERSION");
-    return camera_version.empty() ? "1.1.0" : camera_version; // Default = CHEC-S;
-}
-
-WaveformEventR0 TIOReader::GetEventR0(uint32_t event_index) const {
-    WaveformEventR0 event(n_packets_per_event_, n_pixels_,
-                          first_active_module_slot_);
-    for (uint32_t ipack = 0; ipack < n_packets_per_event_; ipack++) {
-        event.AddPacketShared(ReadPacket(event_index, ipack));
+    if (fitsutils::HasHeaderKey(fits_, "CAMERAVERSION")) {
+        auto camera_version = fitsutils::GetHeaderKeyValue<
+            std::string, TSTRING>(fits_, "CAMERAVERSION");
+        return camera_version;
+    } else {
+        return "1.1.0"; // Default = CHEC-S;
     }
-    return event;
 }
 
-WaveformEventR1 TIOReader::GetEventR1(uint32_t event_index) const {
-    WaveformEventR1 event(n_packets_per_event_, n_pixels_,
-                          first_active_module_slot_, scale_, offset_);
-    for (uint32_t ipack = 0; ipack < n_packets_per_event_; ipack++) {
-        event.AddPacketShared(ReadPacket(event_index, ipack));
-    }
-    return event;
-}
-
-uint32_t TIOReader::GetEventID(uint32_t event_index) const {
+uint32_t TIOReader::GetEventID(size_t event_index) const {
     MoveToEventHDU();
     uint32_t event_id;
     int status = 0;
@@ -236,7 +187,7 @@ uint32_t TIOReader::GetEventID(uint32_t event_index) const {
     return event_id;
 }
 
-uint64_t TIOReader::GetEventTACK(uint32_t event_index) const {
+uint64_t TIOReader::GetEventTACK(size_t event_index) const {
     MoveToEventHDU();
     uint32_t tack32msb, tack32lsb;
     int status = 0;
@@ -252,7 +203,7 @@ uint64_t TIOReader::GetEventTACK(uint32_t event_index) const {
     return (static_cast<uint64_t>(tack32msb) << 32u) | static_cast<uint64_t>(tack32lsb);
 }
 
-uint16_t TIOReader::GetEventNPacketsFilled(uint32_t event_index) const{
+uint16_t TIOReader::GetEventNPacketsFilled(size_t event_index) const{
     MoveToEventHDU();
     int status = 0;
     uint16_t n_filled = 0;
@@ -267,7 +218,7 @@ uint16_t TIOReader::GetEventNPacketsFilled(uint32_t event_index) const{
     return n_filled;
 }
 
-int64_t TIOReader::GetEventCPUSecond(uint32_t event_index) const {
+int64_t TIOReader::GetEventCPUSecond(size_t event_index) const {
     MoveToEventHDU();
     int status = 0;
     int64_t cpu_s = 0;
@@ -282,7 +233,7 @@ int64_t TIOReader::GetEventCPUSecond(uint32_t event_index) const {
     return cpu_s;
 }
 
-int64_t TIOReader::GetEventCPUNanosecond(uint32_t event_index) const {
+int64_t TIOReader::GetEventCPUNanosecond(size_t event_index) const {
     MoveToEventHDU();
     int status = 0;
     int64_t cpu_ns = 0;
@@ -310,7 +261,7 @@ void TIOReader::MoveToEventHDU() const {
 }
 
 std::shared_ptr<WaveformDataPacket> TIOReader::ReadPacket(
-        uint32_t event_index, uint16_t packet_id) const {
+        size_t event_index, uint16_t packet_id) const {
     auto packet = std::make_shared<WaveformDataPacket>(packet_size_);
 
     MoveToEventHDU();
@@ -329,5 +280,4 @@ std::shared_ptr<WaveformDataPacket> TIOReader::ReadPacket(
     return packet;
 }
 
-
-}}
+}

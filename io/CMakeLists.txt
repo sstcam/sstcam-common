@@ -29,5 +29,7 @@ sstcam_python_module(MODULE_NAME io
 sstcam_tests(TESTS test_FitsUtils test_TIOReader
              LIBTARGETS ${LIBTARGET})
 
-
-
+# data files
+file(GLOB DATA_FILES "${CMAKE_CURRENT_SOURCE_DIR}/share/sstcam/io/*")
+file(COPY ${DATA_FILES} DESTINATION ${CMAKE_BINARY_DIR}/share/sstcam/io/)
+install(DIRECTORY "${CMAKE_BINARY_DIR}/share" DESTINATION .)

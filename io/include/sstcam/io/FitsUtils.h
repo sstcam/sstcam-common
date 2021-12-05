@@ -9,14 +9,12 @@
 #include <sstream>
 #include <fitsio.h>
 
-namespace sstcam {
-namespace io {
 
-/**
- * @brief A namespace for utility functions for the cfitsio library
+namespace sstcam::io { // NOLINT(modernize-concat-nested-namespaces)
+/**a
+ * @brief A namespace for utility functions for the cfitsio library.
  */
 namespace fitsutils {
-
 
 std::string ErrorMessage(int status);
 
@@ -112,6 +110,6 @@ void UpdateHeaderKeyValue(fitsfile* fits, const std::string& key, T value, const
     }
 }
 
-}}}
+}}
 
 #endif  // SSTCAM_IO_FITSUTILS_H_
