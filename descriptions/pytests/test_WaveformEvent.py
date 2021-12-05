@@ -20,14 +20,15 @@ def test_waveform_event_r0(packet_array):
     first_active_module_slot = 22
     event = WaveformEventR0(n_packets_per_event, n_pixels, first_active_module_slot)
     with pytest.raises(RuntimeError):
-        event.GetWaveforms()
+        event.GetWaveformSamplesArray()
 
     packet = WaveformDataPacket(packet_size)
     packet.GetDataPacket()[:] = packet_array
     event.AddPacketShared(packet)
     assert event.GetPackets()[0] == packet
-    waveforms = event.GetWaveforms()
+    waveforms = event.GetWaveformSamplesArray()
     assert (waveforms[:32] > 0).all()
+    assert waveforms.dtype == np.uint16
 
 
 def test_waveform_event_r1(packet_array):
@@ -37,14 +38,15 @@ def test_waveform_event_r1(packet_array):
     first_active_module_slot = 22
     event = WaveformEventR1(n_packets_per_event, n_pixels, first_active_module_slot)
     with pytest.raises(RuntimeError):
-        event.GetWaveforms()
+        event.GetWaveformSamplesArray()
 
     packet = WaveformDataPacket(packet_size)
     packet.GetDataPacket()[:] = packet_array
     event.AddPacketShared(packet)
     assert event.GetPackets()[0] == packet
-    waveforms = event.GetWaveforms()
+    waveforms = event.GetWaveformSamplesArray()
     assert (waveforms[:32] > 0).all()
+    assert waveforms.dtype == np.float32
 
 
 def test_scale_offset(packet_array):
@@ -57,7 +59,7 @@ def test_scale_offset(packet_array):
     packet = WaveformDataPacket(packet_size)
     packet.GetDataPacket()[:] = packet_array
     event.AddPacketShared(packet)
-    waveforms_1 = event.GetWaveforms()
+    waveforms_1 = event.GetWaveformSamplesArray()
     assert (waveforms_1[:32] > 0).all()
 
     scale = 10
@@ -67,7 +69,7 @@ def test_scale_offset(packet_array):
     packet = WaveformDataPacket(packet_size)
     packet.GetDataPacket()[:] = packet_array
     event.AddPacketShared(packet)
-    waveforms_2 = event.GetWaveforms()
+    waveforms_2 = event.GetWaveformSamplesArray()
     assert (waveforms_2[:32] > 0).all()
 
     np.testing.assert_equal((waveforms_1[:32] / scale) - offset, waveforms_2[:32])

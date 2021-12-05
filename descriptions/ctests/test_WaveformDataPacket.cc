@@ -5,8 +5,7 @@
 #include "doctest.h"
 #include <fstream>
 
-namespace sstcam {
-namespace descriptions {
+namespace sstcam::descriptions {
 
 TEST_CASE("WaveformDataPacket") {
     std::string path = "../../share/sstcam/descriptions/waveform_data_packet_example.bin";
@@ -70,10 +69,12 @@ TEST_CASE("WaveformDataPacket") {
         ) == packet.GetPacketNBytes());
 
         uint16_t row_0 = 2, column_0 = 1, blockphase_0 = 12;
-        uint16_t cell_id = WaveformDataPacket::CalculateCellID(row_0, column_0, blockphase_0);
+        uint16_t cell_id = WaveformDataPacket::CalculateCellID(
+            row_0, column_0, blockphase_0);
         CHECK(cell_id == 332);
         uint16_t row = 0, column = 0, blockphase = 0;
-        WaveformDataPacket::CalculateRowColumnBlockPhase(cell_id, row, column, blockphase);
+        WaveformDataPacket::CalculateRowColumnBlockPhase(
+            cell_id, row, column, blockphase);
         CHECK(row_0 == row);
         CHECK(column_0 == column);
         CHECK(blockphase_0 == blockphase);
@@ -106,11 +107,11 @@ TEST_CASE("WaveformDataPacket") {
 
         uint16_t wf_start_last = packet.GetWaveformStart(last_wf);
         uint8_t* wf_pointer_last = &packet.GetDataPacket()[wf_start_last];
-        uint8_t* end_pointer_0 = &wf_pointer_last[packet.GetWaveformNBytes() + PACKET_FOOTER_WORDS * 2 - 1];
+        size_t end_index_0 = packet.GetWaveformNBytes() + PACKET_FOOTER_WORDS * 2 - 1;
+        uint8_t* end_pointer_0 = &wf_pointer_last[end_index_0];
         uint8_t* end_pointer_1 = &packet.GetDataPacket()[packet.GetPacketNBytes() - 1];
         CHECK(end_pointer_0 == end_pointer_1);
     }
 }
 
-}  // namespace descriptions
-}  // namespace sstcam
+}

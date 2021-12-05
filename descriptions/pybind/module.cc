@@ -4,8 +4,7 @@
 #include "sstcam_common_version.h"
 #include <pybind11/pybind11.h>
 
-namespace sstcam {
-namespace descriptions {
+namespace sstcam::descriptions {
 
 namespace py = pybind11;
 
@@ -26,5 +25,4 @@ PYBIND11_MODULE(sstcam_descriptions, m) {
     get_hardcoded_module_situation(m);
 }
 
-}  // namespace descriptions
-}  // namespace sstcam
+}

@@ -6,8 +6,7 @@
 #include "doctest.h"
 #include <fstream>
 
-namespace sstcam {
-namespace descriptions {
+namespace sstcam::descriptions {
 
 TEST_CASE("Waveform") {
     std::string path = "../../share/sstcam/descriptions/waveform_data_packet_example.bin";
@@ -64,5 +63,4 @@ TEST_CASE("Waveform") {
     }
 }
 
-}  // namespace descriptions
-}  // namespace sstcam
+}

@@ -3,34 +3,18 @@
 
 #include "sstcam/descriptions/Waveform.h"
 
-namespace sstcam {
-namespace descriptions {
+namespace sstcam::descriptions {
 
-uint16_t Waveform::GetSample12bit(uint16_t sample_index) const {
-    uint16_t first_part = static_cast<uint16_t>(
-            waveform_[2 + 2 * sample_index] & 0xFu
-    ) << 8u;
-    uint16_t second_part = waveform_[3 + 2 * sample_index];
-    return first_part | second_part;
+std::ostream& operator<<(std::ostream& os, const Waveform& waveform) {
+    os << "Address: " << (void*) waveform.waveform_ << std::endl;
+    os << "IsAssociated: " << waveform.IsAssociated() << std::endl;
+    os << "IsErrorFlagOn: " << waveform.IsErrorFlagOn() << std::endl;
+    os << "GetChannelID: " << static_cast<uint16_t>(waveform.GetChannelID()) << std::endl;
+    os << "GetASICID: " << static_cast<uint16_t>(waveform.GetASICID()) << std::endl;
+    os << "GetNSamples: " << waveform.GetNSamples() << std::endl;
+    os << "IsZeroSuppressed: " << waveform.IsZeroSuppressed() << std::endl;
+    os << "GetPixelID: " << waveform.GetPixelID() << std::endl;
+    return os;
 }
 
-uint16_t Waveform::GetSample16bit(uint16_t sample_index) const {
-    uint16_t first_part = static_cast<uint16_t>(
-            waveform_[2 + 2 * sample_index]
-    ) << 8u;
-    uint16_t second_part = waveform_[3 + 2 * sample_index];
-    return first_part | second_part;
 }
-
-void Waveform::SetSample12bit(uint16_t sample_index, uint16_t value) {
-    waveform_[2 + 2 * sample_index] = static_cast<uint8_t>(value >> 8u) & 0xFu;
-    waveform_[3 + 2 * sample_index] = (value & 0xFFu);
-}
-
-void Waveform::SetSample16bit(uint16_t sample_index, uint16_t value) {
-    waveform_[2 + 2 * sample_index] = static_cast<uint8_t>(value >> 8u);
-    waveform_[3 + 2 * sample_index] = (value & 0xFFu);
-}
-
-}  // namespace descriptions
-}  // namespace sstcam

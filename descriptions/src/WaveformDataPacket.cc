@@ -3,19 +3,7 @@
 
 #include "sstcam/descriptions/WaveformDataPacket.h"
 
-namespace sstcam {
-namespace descriptions {
-
-uint64_t WaveformDataPacket::GetTACK() const {
-    return (static_cast<uint64_t>(packet_[12]) << 56u) |
-           (static_cast<uint64_t>(packet_[13]) << 48u) |
-           (static_cast<uint64_t>(packet_[10]) << 40u) |
-           (static_cast<uint64_t>(packet_[11]) << 32u) |
-           (static_cast<uint64_t>(packet_[8]) << 24u) |
-           (static_cast<uint64_t>(packet_[9]) << 16u) |
-           (static_cast<uint64_t>(packet_[2]) << 8u) |
-           (static_cast<uint64_t>(packet_[3]));
-}
+namespace sstcam::descriptions {
 
 uint16_t WaveformDataPacket::CalculatePacketSizeBytes(
         uint16_t n_samples_per_waveform, uint16_t n_waveforms_per_packet) {
@@ -54,5 +42,4 @@ bool WaveformDataPacket::IsValid() const {
 }
 
 
-}  // namespace descriptions
-}  // namespace sstcam
+}

@@ -1,12 +1,13 @@
 // Copyright 2020 Cherenkov Telescope Array Observatory
 // This software is distributed under the terms of the BSD-3-Clause license.
 
+#define DOCTEST_CONFIG_VOID_CAST_EXPRESSIONS
+
 #include "sstcam/descriptions/WaveformEvent.h"
 #include "doctest.h"
 #include <fstream>
 
-namespace sstcam {
-namespace descriptions {
+namespace sstcam::descriptions {
 
 TEST_CASE("GetHardcodedModuleSituation") {
     std::set<uint8_t> slots = {5};
@@ -31,8 +32,10 @@ TEST_CASE("GetHardcodedModuleSituation") {
     }
 
     slots.insert(32);
-    GetHardcodedModuleSituation(slots, n_pixels, first_active_module_slot);
-    CHECK(n_pixels == 2048+64);
+    CHECK_THROWS_AS(
+        GetHardcodedModuleSituation(slots, n_pixels, first_active_module_slot),
+        std::runtime_error
+    );
 }
 
 TEST_CASE("WaveformEvent") {
@@ -67,7 +70,7 @@ TEST_CASE("WaveformEvent") {
         CHECK_THROWS_AS(event.GetFirstCellID(), std::runtime_error);
         CHECK_THROWS_AS(event.GetTACK(), std::runtime_error);
         CHECK_THROWS_AS(event.IsStale(), std::runtime_error);
-        CHECK_THROWS_AS(event.GetWaveforms(), std::runtime_error);
+        CHECK_THROWS_AS(event.GetWaveformSamplesVector(), std::runtime_error);
     }
 
     SUBCASE("Half Empty Event Getters") {
@@ -100,7 +103,7 @@ TEST_CASE("WaveformEvent") {
         CHECK(event.IsFilled());
         CHECK(event.GetNPacketsAdded() == 1);
         CHECK(event.GetPackets()[0] == packet.get());
-        CHECK(event.GetPackets()[0] != packet_ptr2.get()); // TODO: remove
+        CHECK(event.GetPackets()[0] != packet_ptr2.get());
 
         event.Reset();
         CHECK(event.IsEmpty());
@@ -133,7 +136,7 @@ TEST_CASE("WaveformEvent") {
         CHECK(event.IsFilled());
         CHECK(event.GetNPacketsAdded() == 1);
         CHECK(event.GetPackets()[0] == packet.get());
-        CHECK(event.GetPackets()[0] != packet_ptr2.get()); // TODO: remove
+        CHECK(event.GetPackets()[0] != packet_ptr2.get());
 
         event.Reset();
         CHECK(event.IsEmpty());
@@ -170,6 +173,7 @@ TEST_CASE("WaveformEvent") {
         CHECK(event_r0.GetCPUTimeNanosecond() == 30);
         CHECK(event_r0.GetScale() == 1.);
         CHECK(event_r0.GetOffset() == 0.);
+        CHECK(event_r0.GetIndex() == 0.);
         CHECK(event_r0.GetFirstCellID() == 1448);
         CHECK(event_r0.GetTACK() == 2165717354592);
         CHECK(!event_r0.IsStale());
@@ -177,19 +181,21 @@ TEST_CASE("WaveformEvent") {
     }
 
     WaveformEventR1 event_r1_so(n_packets_per_event, n_pixels,
-        first_active_module_slot, 20, 30, 10, 3);
+        first_active_module_slot, 20, 30, 10, 3, 100);
     event_r1_so.AddPacket(packet.get());
 
-    SUBCASE("WaveformEventR1 Scale&Offset") {
+    SUBCASE("WaveformEventR1 Metadata") {
         CHECK(event_r1.GetScale() == 1);
         CHECK(event_r1.GetOffset() == 0);
 
         CHECK(event_r1_so.GetScale() == 10);
         CHECK(event_r1_so.GetOffset() == 3);
+
+        CHECK(event_r1_so.GetIndex() == 100);
     }
 
-    SUBCASE("WaveformEventR0 Waveforms") {
-        std::vector<uint16_t> waveforms = event_r0.GetWaveforms();
+    SUBCASE("WaveformEventR0 Waveform Samples") {
+        std::vector<uint16_t> waveforms = event_r0.GetWaveformSamplesVector();
         bool none_zero = true;
         for (size_t ipix = 0; ipix < 32; ipix++) {
             for (size_t isam = 0; isam < n_samples; isam++) {
@@ -213,7 +219,7 @@ TEST_CASE("WaveformEvent") {
         REQUIRE(!event_r0_2.IsEmpty());
         REQUIRE(!event_r0_2.IsFilled());
 
-        std::vector<uint16_t> waveforms = event_r0_2.GetWaveforms();
+        std::vector<uint16_t> waveforms = event_r0_2.GetWaveformSamplesVector();
         bool none_zero = true;
         for (size_t ipix = 0; ipix < 32; ipix++) {
             for (size_t isam = 0; isam < n_samples; isam++) {
@@ -231,8 +237,8 @@ TEST_CASE("WaveformEvent") {
         CHECK(all_zero);
     }
 
-    SUBCASE("WaveformEventR1 Waveforms") {
-        std::vector<float> waveforms = event_r1.GetWaveforms();
+    SUBCASE("WaveformEventR1 Waveform Samples") {
+        std::vector<float> waveforms = event_r1.GetWaveformSamplesVector();
         bool none_zero = true;
         for (size_t ipix = 0; ipix < 32; ipix++) {
             for (size_t isam = 0; isam < n_samples; isam++) {
@@ -243,4 +249,4 @@ TEST_CASE("WaveformEvent") {
     }
 }
 
-}}
+}

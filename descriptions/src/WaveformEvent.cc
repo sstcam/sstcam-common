@@ -2,9 +2,9 @@
 // This software is distributed under the terms of the BSD-3-Clause license.
 
 #include "sstcam/descriptions/WaveformEvent.h"
+#include <sstream>
 
-namespace sstcam {
-namespace descriptions {
+namespace sstcam::descriptions {
 
 void GetHardcodedModuleSituation(std::set<uint8_t>& active_modules,
         size_t& n_pixels, uint8_t& first_active_module_slot) {
@@ -21,9 +21,9 @@ void GetHardcodedModuleSituation(std::set<uint8_t>& active_modules,
         first_active_module_slot = 0;
     }
     else {
-        n_modules = n_active_modules;
-        std::cout << "WARNING: No case set up for files with N modules:"
-        << n_active_modules << std::endl;
+        std::ostringstream ss;
+        ss << "No case set up for files with N modules " << n_active_modules;
+        throw std::runtime_error(ss.str());
     }
     n_pixels = n_modules * N_PIXELS_PER_MODULE;
 }
@@ -31,7 +31,7 @@ void GetHardcodedModuleSituation(std::set<uint8_t>& active_modules,
 WaveformEvent::WaveformEvent(size_t n_packets_per_event, size_t n_pixels,
     uint8_t first_active_module_slot,
     int64_t cpu_time_second, int64_t cpu_time_nanosecond,
-    float scale, float offset)
+    float scale, float offset, size_t index)
     : n_packets_per_event_(n_packets_per_event),
       packets_(n_packets_per_event),
       packets_owned_(n_packets_per_event),
@@ -41,7 +41,8 @@ WaveformEvent::WaveformEvent(size_t n_packets_per_event, size_t n_pixels,
       cpu_time_second_(cpu_time_second),
       cpu_time_nanosecond_(cpu_time_nanosecond),
       scale_(scale),
-      offset_(offset)
+      offset_(offset),
+      index_(index)
 { }
 
 void WaveformEvent::AddPacket(WaveformDataPacket* packet) {
@@ -83,4 +84,4 @@ WaveformDataPacket* WaveformEvent::GetFirstPacket() const {
     throw std::runtime_error("WaveformEvent is empty");
 }
 
-}}
+}
